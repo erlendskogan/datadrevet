@@ -1,0 +1,84 @@
+% First 5 rows
+\begin{tabular}{lllrlr}
+\toprule
+Area & Item & Element & Year & Unit & Value \\
+\midrule
+Afghanistan & Asses & Stocks & 1961 & Head & 1300000 \\
+Afghanistan & Asses & Stocks & 1962 & Head & 851850 \\
+Afghanistan & Asses & Stocks & 1963 & Head & 1001112 \\
+Afghanistan & Asses & Stocks & 1964 & Head & 1150000 \\
+Afghanistan & Asses & Stocks & 1965 & Head & 1300000 \\
+\bottomrule
+\end{tabular}
+
+% Summary statistics
+\begin{tabular}{lrr}
+\toprule
+ & Year & Value \\
+\midrule
+count & 122458.00 & 120194.00 \\
+mean & 1991.38 & 10355971.08 \\
+std & 17.26 & 58693855.98 \\
+min & 1961.00 & 0.00 \\
+25% & 1976.00 & 5300.00 \\
+50% & 1992.00 & 102173.50 \\
+75% & 2006.00 & 1561571.00 \\
+max & 2020.00 & 1525939479.00 \\
+\bottomrule
+\end{tabular}
+
+% Data types
+\begin{tabular}{ll}
+\toprule
+Column & Dtype \\
+\midrule
+Area & object \\
+Item & object \\
+Element & object \\
+Year & int64 \\
+Unit & object \\
+Value & float64 \\
+\bottomrule
+\end{tabular}
+
+% Missing values
+\begin{tabular}{lrr}
+\toprule
+Column & Missing count & Missing % \\
+\midrule
+Area & 0 & 0.00 \\
+Item & 0 & 0.00 \\
+Element & 0 & 0.00 \\
+Year & 0 & 0.00 \\
+Unit & 0 & 0.00 \\
+Value & 2264 & 1.85 \\
+\bottomrule
+\end{tabular}
+
+% Unique values per categorical column
+\begin{tabular}{lr}
+\toprule
+Column & Unique count \\
+\midrule
+Area & 243 \\
+Item & 14 \\
+Element & 1 \\
+Unit & 3 \\
+\bottomrule
+\end{tabular}
+
+% Outlier summary (IQR method)
+\begin{tabular}{lr}
+\toprule
+Metric & Value \\
+\midrule
+Q1 & 5300.00 \\
+Q3 & 1561571.00 \\
+IQR & 1556271.00 \\
+Lower bound & -2329106.50 \\
+Upper bound & 3895977.50 \\
+Outlier count & 21030.00 \\
+Outlier % & 17.17 \\
+\bottomrule
+\end{tabular}
+
