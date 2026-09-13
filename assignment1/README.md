@@ -91,11 +91,11 @@ Talt på den engelske teksten i Overleaf:
 
 | Del | Ord (inkl. tabell- og figurtekster) |
 |---|---|
-| Introduction (datasett) | ca. 330 |
+| Introduction (datasett) | ca. 380 |
 | Oppgave 1 | ca. 345 |
 | Oppgave 2 | ca. 560 |
-| **Brukt** | **ca. 1 240** |
-| **Igjen til oppgave 3–6** | **ca. 1 760** |
+| **Brukt** | **ca. 1 290** |
+| **Igjen til oppgave 3–6** | **ca. 1 710** |
 
 Selve tabellinnholdet utgjør ca. 320 ord til. Oppgaveteksten sier at tabell- og figurtekster teller,
 men ikke om tabellinnholdet gjør det – det bør avklares med faglærer.
