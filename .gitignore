@@ -1,5 +1,9 @@
 # Datasett (store filer, holdes utenfor repoet)
 food-bank/
 
+# Python
+.venv/
+__pycache__/
+
 # macOS
 .DS_Store
