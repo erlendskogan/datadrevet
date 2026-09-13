@@ -20,6 +20,8 @@ from felles import FIGURES as FIG, NUM, TRIMMED, A, P, Y, read
 FIG.mkdir(parents=True, exist_ok=True)
 
 LABEL = {A: "Areal (ha)", P: "Produksjon (tonn)", Y: "Avling (hg/ha)"}
+# Figurene står i den engelske Overleaf-rapporten, så etikettene der er på engelsk
+FIG_LABEL = {A: "Area harvested (ha)", P: "Production (tonnes)", Y: "Yield (hg/ha)"}
 CAT = ["Area", "Item"]
 BLUE, INK, INK2, GRID = "#2a78d6", "#0b0b0b", "#52514e", "#e6e5e1"
 
@@ -101,10 +103,10 @@ fig, ax = plt.subplots(figsize=(5.2, 1.9))
 y = np.arange(len(NUM))[::-1]
 ax.barh(y, miss.values, color=BLUE, height=0.55)
 for yi, v, n in zip(y, miss.values, df[NUM].isna().sum()):
-    ax.text(v + 0.15, yi, f"{v:.1f} %  ({fmt(n)})".replace(".", ","), va="center", color=INK, fontsize=8.5)
-ax.set_yticks(y, [LABEL[c] for c in NUM], color=INK)
+    ax.text(v + 0.15, yi, f"{v:.1f}%  ({n:,})", va="center", color=INK, fontsize=8.5)
+ax.set_yticks(y, [FIG_LABEL[c] for c in NUM], color=INK)
 ax.set_xlim(0, miss.max() * 1.45)
-ax.set_xlabel("Andel manglende verdier (%)")
+ax.set_xlabel("Share of missing values (%)")
 ax.grid(axis="x", color=GRID, linewidth=0.8)
 ax.set_axisbelow(True)
 ax.spines["left"].set_visible(False)
@@ -127,7 +129,7 @@ for ax, c in zip(axes, NUM):
                flierprops=dict(marker="o", markersize=2, markerfacecolor=INK2,
                                markeredgewidth=0, alpha=0.25))
     ax.set_yscale("log")
-    ax.set_title(LABEL[c], color=INK, fontsize=9)
+    ax.set_title(FIG_LABEL[c], color=INK, fontsize=9)
     ax.set_xticks([])
     ax.grid(axis="y", color=GRID, linewidth=0.8, which="major")
     ax.set_axisbelow(True)

@@ -25,7 +25,7 @@ assignment1/
 ├── README.md                 ← denne filen
 ├── oppgavetekst.pdf
 ├── notater-oppgave3-6.md     ← råd og ferdig utregnede tall til resten av oppgavene
-├── rapport/                  ← rapporttekst per oppgave, klar til å limes inn (norsk)
+├── rapport/                  ← norsk arbeidsversjon av rapportteksten (se «Rapporten» under)
 │   ├── 0-datasett.md
 │   ├── 1-datautforskning.md
 │   ├── 2-manglende-verdier.md
@@ -71,22 +71,31 @@ Skriptene sjekker seg selv underveis (blant annet at ingen verdier går tapt i p
 avling = produksjon × 10 000 / areal i alle rader), og stopper med en feilmelding hvis noe er galt.
 Alle tall i rapporttekstene kommer fra utskriften til skriptene.
 
+## Rapporten
+
+Den innleverte rapporten skrives i **Overleaf, på engelsk**. Introduction (valg av datasett),
+oppgave 1 og oppgave 2 er lagt inn der, med LaTeX-tabeller (booktabs) og figurene fra `rapport/figurer/`
+(last dem opp i Overleaf-prosjektet). Filene i `rapport/` er den norske arbeidsversjonen av de samme tekstene.
+
 ## Når dere legger til oppgave 3–6
 
 - Nytt skript: `src/3_outliers.py` osv. Start med `from felles import CLEAN, NUM, A, P, Y, read` og `df = read(CLEAN)`.
-- Ny rapporttekst: `rapport/3-outliers.md` osv., i samme format som de andre.
-- Nummerering: tabell 1–5 og figur 1–2 er brukt, så neste tabell er **Tabell 6** og neste figur **Figur 3**.
-- Tallformat i rapporten: norsk, med mellomrom som tusenskille og desimalkomma (7,3 %).
+- Rapporttekst skrives rett i Overleaf (engelsk). Notater kan eventuelt legges i `rapport/3-outliers.md` osv.
+- Nummerering: LaTeX nummererer selv – bruk `\label`/`\ref`. Table 1–5 og Figure 1–2 er brukt.
+- Tallformat i rapporten: engelsk, med komma som tusenskille og desimalpunktum (98,101 og 7.3%).
+- Figurer med engelske etiketter, i samme stil som `1_datautforskning.py`.
 
 ## Ordbudsjett (grense 3 000 ord)
 
+Talt på den engelske teksten i Overleaf:
+
 | Del | Ord (inkl. tabell- og figurtekster) |
 |---|---|
-| Datasett | ca. 330 |
-| Oppgave 1 | ca. 330 |
-| Oppgave 2 | ca. 500 |
-| **Brukt** | **ca. 1 160** |
-| **Igjen til oppgave 3–6** | **ca. 1 850** |
+| Introduction (datasett) | ca. 330 |
+| Oppgave 1 | ca. 345 |
+| Oppgave 2 | ca. 560 |
+| **Brukt** | **ca. 1 240** |
+| **Igjen til oppgave 3–6** | **ca. 1 760** |
 
 Selve tabellinnholdet utgjør ca. 320 ord til. Oppgaveteksten sier at tabell- og figurtekster teller,
 men ikke om tabellinnholdet gjør det – det bør avklares med faglærer.

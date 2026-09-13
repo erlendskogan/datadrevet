@@ -1,6 +1,6 @@
 # Oppgave 1 – Datautforskning
 
-> Rapporttekst, klar til å limes inn. Kode: `src/1_datautforskning.py` (skriver ut alle tall og lager figurene).
+> Norsk arbeidsversjon – den engelske teksten står i Overleaf-rapporten. Kode: `src/1_datautforskning.py` (skriver ut alle tall og lager figurene).
 > Ca. 330 ord inkl. tabell- og figurtekster. Beskriver `crop1_trimmed.csv`, altså dataene *før* oppgave 2.
 
 **1a.** Datasettet har 98 101 rader og seks kolonner, der hver rad er ett land (`Area`), én vekst (`Item`) og ett år (`Year`, 2010–2020) med høstet areal, produksjon og avling (Tabell 2). `Area` og `Item` er kategoriske tekstkolonner, og de tre målingene er flyttall. `Year` er et heltall som vi behandler som numerisk, fordi årene er ordnet med like avstander (Tabell 3). Alle målingene er sterkt høyreskjeve: gjennomsnittlig produksjon er over 50 ganger medianen, og standardavviket er større enn gjennomsnittet (Tabell 4).

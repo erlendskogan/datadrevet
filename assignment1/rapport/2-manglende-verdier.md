@@ -1,6 +1,6 @@
 # Oppgave 2 – Håndtering av manglende verdier
 
-> Rapporttekst, klar til å limes inn. Kode: `src/2_manglende_verdier.py`. Ca. 500 ord inkl. tabelltekst.
+> Norsk arbeidsversjon – den engelske teksten står i Overleaf-rapporten. Kode: `src/2_manglende_verdier.py`. Ca. 500 ord inkl. tabelltekst.
 
 Av 98 101 rader mangler 9 448 minst én verdi. Vi undersøkte først hvorfor verdiene mangler, siden årsaken avgjør hvilken metode som passer. Tabell 5 oppsummerer stegene.
 
