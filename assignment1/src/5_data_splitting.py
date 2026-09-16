@@ -8,7 +8,7 @@ Kjør: python assignment1/src/5_datasplitting.py
 """
 from sklearn.model_selection import train_test_split
 
-from felles import CLEAN, DATA, ENCODED, read
+from felles import DATA, ENCODED, read
 
 TEST_SIZE = 0.2
 SEED = 42
