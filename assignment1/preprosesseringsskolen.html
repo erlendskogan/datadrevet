@@ -1,0 +1,1690 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Interaktivt kurs i data preprocessing – Assignment 1, FAOSTAT crop1.">
+<title>Preprosesseringsskolen</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<style>
+:root{
+  --ground:#F2F4EF;
+  --surface:#FFFFFF;
+  --surface-2:#E9EDE5;
+  --ink:#14201A;
+  --ink-2:#3C4A42;
+  --muted:#6B7770;
+  --line:#D3DACD;
+  --line-strong:#B6C0AE;
+  --moss:#2F6F4E;
+  --moss-soft:#DCEBE0;
+  --rust:#B0512A;
+  --rust-soft:#F4E2D7;
+  --gold:#8A6D1F;
+  --gold-soft:#F0E8CE;
+  --shadow:0 1px 2px rgba(20,32,26,.06), 0 8px 24px -16px rgba(20,32,26,.35);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1310;
+    --surface:#171C18;
+    --surface-2:#1F2620;
+    --ink:#E6EBE2;
+    --ink-2:#BCC6BB;
+    --muted:#8D9A8C;
+    --line:#2C352D;
+    --line-strong:#3E4A3F;
+    --moss:#7FC79A;
+    --moss-soft:#1B2E22;
+    --rust:#E39268;
+    --rust-soft:#31211A;
+    --gold:#D6BC6B;
+    --gold-soft:#2A2415;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1310;
+  --surface:#171C18;
+  --surface-2:#1F2620;
+  --ink:#E6EBE2;
+  --ink-2:#BCC6BB;
+  --muted:#8D9A8C;
+  --line:#2C352D;
+  --line-strong:#3E4A3F;
+  --moss:#7FC79A;
+  --moss-soft:#1B2E22;
+  --rust:#E39268;
+  --rust-soft:#31211A;
+  --gold:#D6BC6B;
+  --gold-soft:#2A2415;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Source Serif 4", Georgia, "Times New Roman", serif;
+  font-size:17px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4,.ui{font-family:"Archivo","Helvetica Neue",Arial,sans-serif}
+code,kbd,.mono,table.data,.num{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:232px minmax(0,1fr);gap:0;max-width:1180px;margin:0 auto}
+.rail{
+  position:sticky;top:env(safe-area-inset-top, 0px);align-self:start;
+  max-height:100vh;overflow-y:auto;
+  padding:28px 16px 40px 20px;
+  border-right:1px solid var(--line);
+}
+.rail-title{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;font-weight:600}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rail a{
+  display:grid;grid-template-columns:22px 1fr;gap:9px;align-items:baseline;
+  padding:6px 8px;border-radius:5px;text-decoration:none;color:var(--ink-2);
+  font-family:"Archivo",sans-serif;font-size:13.5px;line-height:1.35;
+}
+.rail a:hover{background:var(--surface-2);color:var(--ink)}
+.rail a.on{background:var(--moss-soft);color:var(--ink);font-weight:600}
+.rail a .n{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);font-weight:500}
+.rail a.on .n,.rail a.done .n{color:var(--moss)}
+.rail a.done .n::after{content:"✓";margin-left:1px}
+.progress{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-family:"Archivo",sans-serif;font-size:12px;color:var(--muted)}
+.bar{height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-top:7px}
+.bar i{display:block;height:100%;background:var(--moss);width:0;transition:width .35s ease}
+
+main{padding:0 clamp(16px,4vw,52px) 96px;min-width:0}
+
+/* ---------- masthead ---------- */
+.masthead{padding:52px 0 36px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--moss);margin:0 0 14px}
+h1{font-size:clamp(34px,6.2vw,54px);line-height:1.02;margin:0 0 16px;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
+.standfirst{font-size:19px;color:var(--ink-2);margin:0;max-width:60ch}
+.meta-row{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:26px;font-family:"Archivo",sans-serif;font-size:13px;color:var(--muted)}
+.meta-row b{color:var(--ink);font-weight:600}
+
+/* ---------- chapters ---------- */
+section.ch{padding:52px 0 8px;border-bottom:1px solid var(--line);scroll-margin-top:12px}
+.ch-head{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+.ch-num{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--moss);letter-spacing:.06em;padding-top:4px}
+h2{font-size:clamp(25px,4vw,33px);margin:0;font-weight:700;letter-spacing:-.015em;line-height:1.14;text-wrap:balance}
+.ch-aim{font-size:15px;color:var(--muted);margin:2px 0 26px;padding-left:0}
+h3{font-size:19px;margin:34px 0 10px;font-weight:600;letter-spacing:-.005em}
+h4{font-size:15px;margin:22px 0 6px;font-weight:600}
+p{margin:0 0 14px;max-width:66ch}
+ul,ol.body{margin:0 0 16px;padding-left:22px;max-width:64ch}
+li{margin-bottom:6px}
+strong{font-weight:600}
+a{color:var(--moss)}
+
+code{background:var(--surface-2);padding:1px 5px;border-radius:3px;font-size:.87em}
+pre{
+  background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--moss);
+  border-radius:4px;padding:13px 15px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0 0 18px;
+}
+pre code{background:none;padding:0;font-size:13px}
+.cm{color:var(--muted)}
+
+/* ---------- callouts ---------- */
+.note{
+  border-left:3px solid var(--line-strong);padding:2px 0 2px 16px;margin:0 0 18px;
+  color:var(--ink-2);font-size:16px;max-width:64ch;
+}
+.note.key{border-left-color:var(--moss)}
+.note.trap{border-left-color:var(--rust)}
+.note .lab{
+  display:block;font-family:"Archivo",sans-serif;font-size:11.5px;letter-spacing:.11em;
+  text-transform:uppercase;font-weight:600;margin-bottom:3px;color:var(--muted);
+}
+.note.key .lab{color:var(--moss)}
+.note.trap .lab{color:var(--rust)}
+
+.dataset{
+  background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  padding:16px 18px;margin:0 0 20px;box-shadow:var(--shadow);
+}
+.dataset .lab{font-family:"Archivo",sans-serif;font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:8px}
+.dataset p:last-child{margin-bottom:0}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+table th,table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+table thead th{
+  font-family:"Archivo",sans-serif;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;background:var(--surface-2);
+}
+table tbody tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+tr.hl td{background:var(--moss-soft)}
+caption{caption-side:bottom;text-align:left;padding:9px 12px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+
+/* ---------- interactive figure ---------- */
+.fig{
+  background:var(--surface);border:1px solid var(--line);border-radius:7px;
+  margin:24px 0;box-shadow:var(--shadow);overflow:hidden;
+}
+.fig-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);
+}
+.fig-head h4{margin:0;font-size:14px;font-weight:600}
+.fig-head .tag{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.fig-body{padding:16px}
+.fig figcaption{padding:0 16px 14px;font-size:13.5px;color:var(--muted);max-width:68ch}
+canvas{display:block;width:100%;max-width:100%;border-radius:4px}
+
+.ctrls{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;margin-bottom:14px}
+.ctrl{display:flex;flex-direction:column;gap:5px;min-width:160px;flex:1 1 170px}
+.ctrl label{font-family:"Archivo",sans-serif;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
+.ctrl label b{color:var(--ink);font-family:"IBM Plex Mono",monospace;font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--moss);margin:0}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:5px;overflow:hidden;flex:0 0 auto}
+.seg button{
+  font-family:"Archivo",sans-serif;font-size:12.5px;padding:6px 12px;border:none;cursor:pointer;
+  background:var(--surface);color:var(--ink-2);border-right:1px solid var(--line);
+}
+.seg button:last-child{border-right:none}
+.seg button[aria-pressed="true"]{background:var(--moss);color:#FFFFFF;font-weight:600}
+.seg button:focus-visible,.btn:focus-visible,.rail a:focus-visible,summary:focus-visible{outline:2px solid var(--moss);outline-offset:2px}
+
+.readout{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.stat{
+  border:1px solid var(--line);border-radius:5px;padding:7px 11px;background:var(--surface-2);
+  min-width:96px;flex:1 1 96px;
+}
+.stat .k{font-family:"Archivo",sans-serif;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block}
+.stat .v{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat.warn .v{color:var(--rust)}
+.stat.good .v{color:var(--moss)}
+
+.btn{
+  font-family:"Archivo",sans-serif;font-size:13px;font-weight:500;padding:7px 14px;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);
+  border-radius:5px;cursor:pointer;
+}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--moss);border-color:var(--moss);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#0F1310}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#0F1310}
+ :root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#0F1310}}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#0F1310}
+
+/* grid demos */
+.panelgrid{display:grid;grid-template-columns:repeat(11,1fr);gap:2px;margin:6px 0 4px}
+.panelgrid i{aspect-ratio:1;border-radius:2px;background:var(--surface-2);display:block}
+.panelgrid i.train{background:var(--moss)}
+.panelgrid i.test{background:var(--rust)}
+.gridlabels{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted)}
+.serieslab{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);margin:10px 0 2px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-family:"Archivo",sans-serif;font-size:12px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:2px;display:inline-block}
+
+/* scaling tracks */
+.track{margin:14px 0 2px}
+.track .tlab{font-family:"Archivo",sans-serif;font-size:12.5px;font-weight:600;margin-bottom:3px;display:flex;justify-content:space-between}
+.track .tlab em{font-family:"IBM Plex Mono",monospace;font-style:normal;font-size:11.5px;color:var(--muted);font-weight:400}
+.line{position:relative;height:34px;border-bottom:1px solid var(--line-strong);margin-bottom:3px}
+.line .dot{position:absolute;top:9px;width:9px;height:9px;border-radius:50%;background:var(--moss);transform:translateX(-50%);transition:left .4s cubic-bezier(.3,.9,.3,1)}
+.line .dot.out{background:var(--rust);width:11px;height:11px;top:8px}
+.line .tick{position:absolute;bottom:-17px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);transform:translateX(-50%)}
+.track{padding-bottom:16px}
+
+/* encoding demo */
+.enc-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+
+/* ---------- quiz ---------- */
+.quiz{
+  background:var(--surface);border:1px solid var(--line);border-radius:7px;
+  margin:26px 0;box-shadow:var(--shadow);
+}
+.quiz-head{
+  padding:11px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);
+  font-family:"Archivo",sans-serif;font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+}
+.quiz-head .score{color:var(--moss);letter-spacing:.04em}
+.q{padding:16px;border-bottom:1px solid var(--line)}
+.q:last-child{border-bottom:none}
+.q .stem{font-size:16px;margin:0 0 12px;max-width:64ch}
+.q .stem .qn{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);margin-right:7px}
+.opts{display:flex;flex-direction:column;gap:7px}
+.opt{
+  display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1px solid var(--line);
+  border-radius:5px;cursor:pointer;font-size:15px;background:var(--surface);text-align:left;
+  color:var(--ink);font-family:inherit;line-height:1.45;
+}
+.opt:hover:not([disabled]){border-color:var(--line-strong);background:var(--surface-2)}
+.opt .mk{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);padding-top:2px;flex:0 0 auto}
+.opt[data-state="right"]{border-color:var(--moss);background:var(--moss-soft)}
+.opt[data-state="right"] .mk{color:var(--moss);font-weight:600}
+.opt[data-state="wrong"]{border-color:var(--rust);background:var(--rust-soft)}
+.opt[data-state="wrong"] .mk{color:var(--rust);font-weight:600}
+.opt[disabled]{cursor:default}
+.fb{margin-top:11px;font-size:14.5px;color:var(--ink-2);border-left:3px solid var(--moss);padding-left:12px;max-width:64ch}
+.fb.bad{border-left-color:var(--rust)}
+textarea{
+  width:100%;min-height:104px;padding:11px 13px;border:1px solid var(--line-strong);border-radius:5px;
+  font-family:"Source Serif 4",Georgia,serif;font-size:15px;line-height:1.55;background:var(--surface);color:var(--ink);resize:vertical;
+}
+textarea:focus-visible{outline:2px solid var(--moss);outline-offset:1px}
+.hintrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.wordcount{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
+.model{
+  margin-top:12px;background:var(--surface-2);border-radius:5px;padding:13px 15px;font-size:15px;
+}
+.model .lab{font-family:"Archivo",sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:600;display:block;margin-bottom:5px}
+.model ul{margin:6px 0 0;padding-left:20px}
+.model p:last-child,.model li:last-child{margin-bottom:0}
+
+details{border-top:1px solid var(--line);margin-top:14px;padding-top:10px}
+details summary{cursor:pointer;font-family:"Archivo",sans-serif;font-size:13px;color:var(--moss);font-weight:500}
+details[open] summary{margin-bottom:9px}
+
+/* checklist */
+.check{list-style:none;padding:0;margin:0 0 18px;max-width:66ch}
+.check li{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);margin:0}
+.check input[type=checkbox]{margin-top:5px;accent-color:var(--moss);width:15px;height:15px;flex:0 0 auto}
+.check .pts{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);flex:0 0 auto;padding-top:2px}
+.check label{cursor:pointer;font-size:15.5px}
+
+footer{padding:40px 0 0;color:var(--muted);font-size:14px}
+.top{margin-top:20px}
+
+@media (max-width:860px){
+  .shell{display:block;max-width:100%}
+  .rail{
+    position:static;max-height:none;border-right:none;border-bottom:1px solid var(--line);
+    padding:14px 16px;overflow-x:auto;
+  }
+  .rail ol{flex-direction:row;gap:6px;min-width:max-content}
+  .rail a{grid-template-columns:auto;gap:0;white-space:nowrap;border:1px solid var(--line);font-size:12.5px;padding:5px 10px}
+  .rail-title{margin-bottom:10px}
+  .progress{margin-top:12px}
+  main{padding:0 16px 72px}
+  body{font-size:16.5px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+html{scroll-behavior:smooth}
+</style>
+
+<div class="shell">
+<nav class="rail" aria-label="Kapitler">
+  <p class="rail-title">Preprosessering</p>
+  <ol id="toc"></ol>
+  <div class="progress">
+    <span id="progtext">0 av 0 oppgaver</span>
+    <div class="bar"><i id="progbar"></i></div>
+  </div>
+</nav>
+
+<main>
+<header class="masthead">
+  <p class="eyebrow">Assignment 1 · Data Preprocessing</p>
+  <h1>Preprosesseringsskolen</h1>
+  <p class="standfirst">Ti kapitler som tar deg fra rå FAOSTAT-avlingsdata til et ferdig preprosessert datasett — med alt du trenger for å gjøre hvert valg selv, og for å begrunne det i rapporten.</p>
+  <div class="meta-row">
+    <span><b>Datasett:</b> crop1.csv, FAOSTAT</span>
+    <span><b>Kapitler:</b> 10</span>
+    <span><b>Oppgaver:</b> <span id="ntasks">–</span></span>
+    <span><b>Ordgrense rapport:</b> 3 000</span>
+  </div>
+</header>
+
+<!-- ============ 0 ============ -->
+<section class="ch" id="k0">
+  <div class="ch-head"><span class="ch-num">00</span><h2>Hva oppgaven faktisk måler</h2></div>
+  <p class="ch-aim">Mål: vite hvor poengene ligger før du skriver en eneste linje kode.</p>
+
+  <p>Oppgaven heter «Data Preprocessing», men den handler like mye om <em>begrunnelse</em> som om kode. Se på fordelingen av poeng, og legg spesielt merke til én setning i oppgaveteksten: <strong>«If the justification is missing from any task where it is asked for, 10 marks will be deducted from the task.»</strong> På en 20-poengs deloppgave er det halve poengsummen.</p>
+
+  <div class="tw"><table>
+    <caption>Poeng per deloppgave, og hva sensor konkret ser etter.</caption>
+    <thead><tr><th>Oppgave</th><th class="num">Poeng</th><th>Krever begrunnelse?</th><th>Kjernen</th></tr></thead>
+    <tbody>
+      <tr><td>1 Data Exploration</td><td class="num">10</td><td>Nei</td><td>Beskriv: rader, dtyper, statistikk, manglende, outliers, unike kategorier</td></tr>
+      <tr class="hl"><td>2 Data Cleaning</td><td class="num">20</td><td><strong>Ja</strong></td><td>Velg metode per kolonne og forklar hvorfor</td></tr>
+      <tr class="hl"><td>3 Handling Outliers</td><td class="num">20</td><td><strong>Ja</strong></td><td>Detekter (IQR/z), og forsvar fjern / capp / transformer</td></tr>
+      <tr class="hl"><td>4 Data Transformation</td><td class="num">30</td><td><strong>Ja</strong></td><td>Encoding + skalering, begge med begrunnelse</td></tr>
+      <tr><td>5 Data Splitting</td><td class="num">10</td><td>Forklaring</td><td>Split, og forklar sammenhengen med overtilpasning</td></tr>
+      <tr><td>6 PCA (bonus)</td><td class="num">10</td><td>Diskusjon</td><td>Kjør PCA og diskuter effekten på datasettet</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note key"><span class="lab">Regelen som gir flest poeng</span>
+  Hvert valg du gjør skal ha formen: <strong>«Vi gjorde X fordi [egenskap ved <em>disse</em> dataene], ikke Y fordi [konsekvens]».</strong> «Vi brukte medianen fordi den er robust» er en lærebokfrase. «Vi brukte medianen fordi produksjonen er så høyreskjev at gjennomsnittet er 54 ganger medianen» er en begrunnelse.</div>
+
+  <p>Ordgrensen på 3 000 ord er streng, og tabell- og figurtekster teller med. Det betyr at du ikke kan skrive langt om alt. Prioriter etter poengtabellen: oppgave 4 er verdt tre ganger så mye som oppgave 1.</p>
+
+  <h3>Hele rørledningen på én side</h3>
+  <p>Rekkefølgen under er ikke tilfeldig — den er selve fasiten på hvordan preprosessering henger sammen. Hvert steg forutsetter det forrige, og ett av dem (splittingen) må egentlig skje <em>før</em> flere av de andre. Det kommer vi tilbake til i kapittel 7.</p>
+
+  <pre><code>rå data
+  │  <span class="cm"># kap 1  forstå formatet: langt vs. bredt, hva er én rad?</span>
+  ├─ utforsk         head, dtypes, describe, nunique, isna     <span class="cm">→ oppg. 1</span>
+  ├─ rens            manglende verdier: slett / imputer        <span class="cm">→ oppg. 2</span>
+  ├─ outliers        IQR, z-score: fjern / capp / transformer  <span class="cm">→ oppg. 3</span>
+  ├─ SPLITT          <span class="cm"># her, ikke senere — se kap 7</span>            <span class="cm">→ oppg. 5</span>
+  ├─ transformer     encoding + skalering, tilpasset på train  <span class="cm">→ oppg. 4</span>
+  └─ PCA             dimensjonsreduksjon                       <span class="cm">→ oppg. 6</span></code></pre>
+
+  <div class="dataset"><span class="lab">Datasettet i dette kurset</span>
+  <p>Alle eksempler bruker <code>crop1.csv</code> fra FAOSTAT: høstet areal, produksjon og avling per land, vekst og år. Etter trimming til 2010–2020 og fjerning av regionsummer: <strong>98 101 rader</strong>, 200 land, 118 vekster. Tre målekolonner:</p>
+  <p class="mono" style="font-size:13.5px;margin-top:8px"><code>area_harvested_ha</code> (hektar) · <code>production_tonnes</code> (tonn) · <code>yield_hg_per_ha</code> (hektogram per hektar)</p>
+  <p style="margin-top:8px">Merk deg allerede nå: <strong>avling = produksjon × 10 000 / areal</strong>. Den tredje kolonnen er regnet ut fra de to andre. Det får konsekvenser i kapittel 5, 7 og 8.</p></div>
+
+  <div class="quiz" data-quiz="q0"></div>
+</section>
+
+<!-- ============ 1 ============ -->
+<section class="ch" id="k1">
+  <div class="ch-head"><span class="ch-num">01</span><h2>Hva er én rad?</h2></div>
+  <p class="ch-aim">Mål: kunne si hva en observasjon er, og gjenkjenne langt vs. bredt format.</p>
+
+  <p>Før noe annet må du kunne fullføre setningen: «Én rad i datasettet mitt er én ___». Svaret bestemmer alt etterpå — hva som er en manglende verdi, hva som er en outlier, og hva en modell egentlig ville predikert.</p>
+
+  <p>FAOSTAT leverer data i <strong>langt format</strong> (tidy long): hver måling har sin egen rad, og kolonnen <code>Element</code> sier hva slags måling det er. Det er praktisk for lagring, men ubrukelig for modellering — en modell trenger én rad per observasjon med målingene som kolonner. Det kalles <strong>bredt format</strong>, og overgangen gjøres med en pivot.</p>
+
+  <div class="fig">
+    <div class="fig-head"><h4>Figur 1 · Langt format blir bredt</h4><span class="tag">pivot</span></div>
+    <div class="fig-body">
+      <div class="ctrls">
+        <div class="seg" role="group" aria-label="Format">
+          <button type="button" id="fmt-long" aria-pressed="true">Langt (rå FAOSTAT)</button>
+          <button type="button" id="fmt-wide" aria-pressed="false">Bredt (etter pivot)</button>
+        </div>
+      </div>
+      <div class="tw" id="pivot-table"></div>
+      <div class="readout">
+        <div class="stat"><span class="k">Rader</span><span class="v" id="pv-rows">–</span></div>
+        <div class="stat"><span class="k">Kolonner</span><span class="v" id="pv-cols">–</span></div>
+        <div class="stat"><span class="k">Én rad er</span><span class="v" id="pv-unit" style="font-size:12px">–</span></div>
+      </div>
+    </div>
+    <figcaption id="pivot-cap">I langt format er Afghanistans mandler i 2010 spredt over tre rader. Bytt til bredt format for å se de samme tallene som én observasjon.</figcaption>
+  </div>
+
+  <pre><code>wide = raw.pivot(index=["Area","Item","Year"], columns="Element", values="Value")
+
+<span class="cm"># Kontroller alltid at ingenting forsvant i pivoten:</span>
+assert wide.notna().sum().sum() == raw["Value"].notna().sum()</code></pre>
+
+  <div class="note trap"><span class="lab">Fellen alle går i</span>
+  FAOSTAT inneholder både land <em>og</em> regioner: «World», «Africa», «European Union (27)», «China» (som er summen av fastlandet, Taiwan, Hongkong og Macao). Lar du dem ligge, teller du de samme avlingene flere ganger, og «World» blir en gigantisk outlier i hver eneste vekst. Fjern aggregatene <strong>før</strong> du beskriver datasettet — 35 av dem i crop1.</div>
+
+  <p>Når du har fjernet aggregatene og valgt et årsintervall, har du et datasett som er <em>ditt</em>. Alt du rapporterer i oppgave 1 gjelder denne versjonen, og du må si hvilken versjon det er.</p>
+
+  <div class="quiz" data-quiz="q1"></div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="ch" id="k2">
+  <div class="ch-head"><span class="ch-num">02</span><h2>Utforskning: å lese en fordeling</h2></div>
+  <p class="ch-aim">Mål: oppgave 1 komplett, og forstå hvorfor skjevhet driver alle senere valg.</p>
+
+  <p>Oppgave 1 har en enkel sjekkliste. Kjør den mekanisk, så mister du ingen poeng:</p>
+
+  <pre><code>df.head()                 <span class="cm"># 1a  de første radene</span>
+df.dtypes                 <span class="cm"># 1a  datatype per kolonne</span>
+df.describe()             <span class="cm"># 1a  antall, snitt, std, min, kvartiler, maks</span>
+df.isna().sum()           <span class="cm"># 1b  manglende verdier</span>
+df.duplicated().sum()     <span class="cm"># 1b  duplikater</span>
+df["Item"].nunique()      <span class="cm"># 1b  unike verdier i kategoriske kolonner</span>
+df["Item"].value_counts() <span class="cm"># 1b  ... og hvor skjevt fordelt de er</span></code></pre>
+
+  <p>Men <code>describe()</code> er ikke svaret — det er råmaterialet. Poengene ligger i hva du <em>leser ut</em> av det. Se på de virkelige tallene fra crop1:</p>
+
+  <div class="tw"><table>
+    <caption>Oppsummerende statistikk, <code>crop1_trimmed.csv</code>. Legg merke til avstanden mellom median og maks.</caption>
+    <thead><tr><th>Kolonne</th><th class="num">Antall</th><th class="num">Gj.snitt</th><th class="num">Std.avvik</th><th class="num">Median</th><th class="num">Q3</th><th class="num">Maks</th></tr></thead>
+    <tbody>
+      <tr><td>area_harvested_ha</td><td class="num">90 929</td><td class="num">161 389</td><td class="num">1 312 123</td><td class="num">3 394</td><td class="num">24 009</td><td class="num">45 000 000</td></tr>
+      <tr><td>production_tonnes</td><td class="num">92 343</td><td class="num">1 025 476</td><td class="num">11 853 360</td><td class="num">19 067</td><td class="num">143 400</td><td class="num">768 594 154</td></tr>
+      <tr><td>yield_hg_per_ha</td><td class="num">88 653</td><td class="num">133 757</td><td class="num">602 735</td><td class="num">58 692</td><td class="num">148 797</td><td class="num">50 847 458</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>Tre ting leses direkte ut av tabellen, og alle tre er verdt poeng:</p>
+  <ul>
+    <li><strong>Sterk høyreskjevhet.</strong> Gjennomsnittlig produksjon er 54 ganger medianen. Når snittet ligger så langt over medianen, er halen lang og tynn mot høyre.</li>
+    <li><strong>Std &gt; snitt.</strong> Variasjonskoeffisienten er over 1 i alle tre kolonnene — typisk for tellinger og mengder som ikke kan være negative.</li>
+    <li><strong>Maks er ekstrem.</strong> Største produksjon er 5 360 ganger Q3. Det er ikke nødvendigvis en feil (det er Brasils sukkerrør), men det avgjør hva slags outlier-håndtering og skalering som gir mening.</li>
+  </ul>
+
+  <p>Den siste observasjonen fortjener et bilde. Skyv på kontrollen under og se hva en logaritmetransformasjon gjør med nøyaktig de samme tallene.</p>
+
+  <div class="fig">
+    <div class="fig-head"><h4>Figur 2 · Den samme fordelingen, to skalaer</h4><span class="tag">interaktiv</span></div>
+    <div class="fig-body">
+      <div class="ctrls">
+        <div class="seg" role="group" aria-label="Skala">
+          <button type="button" id="sk-raw" aria-pressed="true">Rå skala</button>
+          <button type="button" id="sk-log" aria-pressed="false">log₁₀-skala</button>
+        </div>
+        <div class="seg" role="group" aria-label="Kolonne">
+          <button type="button" class="colpick" data-col="prod" aria-pressed="true">Produksjon</button>
+          <button type="button" class="colpick" data-col="area" aria-pressed="false">Areal</button>
+          <button type="button" class="colpick" data-col="yield" aria-pressed="false">Avling</button>
+        </div>
+      </div>
+      <canvas id="hist" height="300" aria-label="Histogram over valgt kolonne"></canvas>
+      <div class="readout">
+        <div class="stat"><span class="k">Median</span><span class="v" id="h-med">–</span></div>
+        <div class="stat"><span class="k">Gj.snitt</span><span class="v" id="h-mean">–</span></div>
+        <div class="stat"><span class="k">Snitt / median</span><span class="v" id="h-ratio">–</span></div>
+        <div class="stat"><span class="k">Skjevhet</span><span class="v" id="h-skew">–</span></div>
+      </div>
+    </div>
+    <figcaption>Simulert utvalg på 4 000 verdier, trukket slik at kvartilene matcher crop1. På rå skala ligger nesten alt i første stolpe og halen er usynlig. På log-skala blir fordelingen nesten symmetrisk — det er signaturen på en <em>lognormal</em> størrelse, og det er hovedgrunnen til at log-transformasjon er et så godt verktøy i kapittel 4 og 6.</figcaption>
+  </div>
+
+  <div class="note key"><span class="lab">Numerisk eller kategorisk?</span>
+  <code>Year</code> er et heltall, men det gjør den ikke automatisk numerisk. Spørsmålet er om avstandene betyr noe: er 2010 → 2011 det samme «steget» som 2019 → 2020? Ja — årene er ordnet med like mellomrom, så numerisk er riktig, og det sparer deg 11 one-hot-kolonner. Et postnummer eller et land-ID ville vært heltall <em>uten</em> at avstandene betyr noe, og måtte vært kategorisk. Skriv denne vurderingen i rapporten; den er gratis poeng.</div>
+
+  <p>Til slutt, de kategoriske kolonnene. Antall unike verdier er halve svaret; fordelingen er den andre halvparten. I crop1 har <code>Area</code> 200 land og <code>Item</code> 118 vekster, men antall rader per kategori spenner fra 11 til 1 298. 13 av vekstene er sekkekategorier («nes» = <em>not elsewhere specified</em>). Høy <strong>kardinalitet</strong> — mange unike verdier — er nøyaktig det argumentet du trenger i kapittel 5.</p>
+
+  <div class="quiz" data-quiz="q2"></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="ch" id="k3">
+  <div class="ch-head"><span class="ch-num">03</span><h2>Manglende verdier</h2></div>
+  <p class="ch-aim">Mål: oppgave 2 — velge metode per kolonne og begrunne det med mekanismen bak hullet.</p>
+
+  <p>Alle kan skrive <code>df.fillna(df.mean())</code>. Poengene får du for å svare på spørsmålet før det: <strong>hvorfor mangler verdien?</strong> Statistikken skiller mellom tre mekanismer, og de leder til ulike valg.</p>
+
+  <div class="tw"><table>
+    <caption>De tre mekanismene. Navnene er standard; det er konsekvensene som er poenget.</caption>
+    <thead><tr><th>Mekanisme</th><th>Betyr</th><th>Eksempel i crop1</th><th>Konsekvens</th></tr></thead>
+    <tbody>
+      <tr><td><strong>MCAR</strong><br><span class="mono" style="font-size:11px">completely at random</span></td><td>Hullet er uavhengig av alt</td><td>En tilfeldig innrapportering forsvant</td><td>Sletting er trygt, bare mindre data</td></tr>
+      <tr><td><strong>MAR</strong><br><span class="mono" style="font-size:11px">at random</span></td><td>Avhenger av <em>observerte</em> kolonner</td><td>Små land rapporterer sjeldnere</td><td>Imputer <em>betinget</em> (per land/vekst), ellers skjevhet</td></tr>
+      <tr class="hl"><td><strong>MNAR</strong><br><span class="mono" style="font-size:11px">not at random</span></td><td>Avhenger av verdien selv</td><td>Avlingen mangler nettopp fordi den var null</td><td>Ingen imputering er nøytral — må diskuteres</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>Du kan sjelden bevise hvilken mekanisme som gjelder, men du kan argumentere. Og i crop1 har du et sjeldent gode: <strong>identiteten avling = produksjon × 10 000 / areal</strong>. Mangler nøyaktig én av de tre, kan du regne den ut eksakt i stedet for å gjette. Det slår enhver imputeringsmetode — og det er nettopp den typen datasett-spesifikk begrunnelse sensor er ute etter.</p>
+
+  <h3>Verktøykassen</h3>
+  <div class="tw"><table>
+    <caption>Metode, når den passer, og hva den ødelegger.</caption>
+    <thead><tr><th>Metode</th><th>Passer når</th><th>Prisen</th></tr></thead>
+    <tbody>
+      <tr><td>Slette rader</td><td>Få hull, og de er MCAR</td><td>Mister data; skaper skjevhet hvis MAR/MNAR</td></tr>
+      <tr><td>Slette kolonne</td><td>Svært høy andel manglende</td><td>Mister en potensielt viktig variabel</td></tr>
+      <tr><td>Gjennomsnitt</td><td>Symmetrisk fordeling</td><td>Trekkes av outliers; krymper variansen</td></tr>
+      <tr class="hl"><td>Median</td><td>Skjev fordeling <em>(som her)</em></td><td>Krymper variansen; ignorerer sammenhenger</td></tr>
+      <tr><td>Modus</td><td>Kategoriske kolonner</td><td>Forsterker den vanligste kategorien</td></tr>
+      <tr><td>Gruppe-median</td><td>MAR: gruppene forklarer hullet</td><td>Krever nok rader per gruppe</td></tr>
+      <tr><td>Utregning fra identitet</td><td>Kolonnene henger deterministisk sammen</td><td>Gir en verdi som ikke er observert — flagg den</td></tr>
+      <tr><td>Interpolering i tid</td><td>Tidsserier med hull i midten</td><td>Ekstrapolerer dårlig i endene</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>«Krymper variansen» er den viktigste kostnaden, og den er lett å undervurdere. Setter du 10 % av verdiene til nøyaktig medianen, får fordelingen en kunstig topp der og standardavviket faller — selv om gjennomsnittet ser uendret ut. Prøv det:</p>
+
+  <div class="fig">
+    <div class="fig-head"><h4>Figur 3 · Hva imputeringen gjør med fordelingen</h4><span class="tag">interaktiv</span></div>
+    <div class="fig-body">
+      <div class="ctrls">
+        <div class="ctrl">
+          <label for="miss-pct">Andel manglende <b id="miss-pct-v">20 %</b></label>
+          <input type="range" id="miss-pct" min="0" max="60" step="5" value="20">
+        </div>
+        <div class="seg" role="group" aria-label="Strategi">
+          <button type="button" class="impick" data-m="drop" aria-pressed="true">Slett rader</button>
+          <button type="button" class="impick" data-m="mean" aria-pressed="false">Gj.snitt</button>
+          <button type="button" class="impick" data-m="median" aria-pressed="false">Median</button>
+        </div>
+      </div>
+      <canvas id="imphist" height="260" aria-label="Fordeling før og etter imputering"></canvas>
+      <div class="readout">
+        <div class="stat"><span class="k">Rader igjen</span><span class="v" id="im-n">–</span></div>
+        <div class="stat"><span class="k">Median</span><span class="v" id="im-med">–</span></div>
+        <div class="stat"><span class="k">Std.avvik</span><span class="v" id="im-std">–</span></div>
+        <div class="stat"><span class="k">Endring i std</span><span class="v" id="im-dstd">–</span></div>
+      </div>
+    </div>
+    <figcaption>Grå omriss = den fullstendige fordelingen. Farget = etter at hullene er slått ut (MCAR) og håndtert. Sletting bevarer formen men mister rader; imputering beholder radene men lager en kunstig søyle ved den innsatte verdien, og standardavviket faller.</figcaption>
+  </div>
+
+  <div class="note trap"><span class="lab">Rekkefølgefellen</span>
+  Regner du gjennomsnittet på <em>hele</em> datasettet og imputerer med det, har informasjon fra testsettet lekket inn i treningsdataene. Riktig rekkefølge: splitt først, regn medianen på treningssettet, bruk den samme verdien på testsettet. Se kapittel 7 — og nevn det i oppgave 2, så får du samme poeng to steder.</div>
+
+  <h3>Slik skriver du oppgave 2</h3>
+  <ol class="body">
+    <li>Tabell: antall og andel manglende per kolonne (gjerne også hvor mange rader som mangler <em>alle</em> målinger).</li>
+    <li>Ett avsnitt om mønsteret: er hullene tilfeldige, eller samler de seg i visse land, vekster eller år?</li>
+    <li>Regelen du valgte, i rekkefølge — for eksempel: (a) regn ut fra identiteten der to av tre finnes, (b) slett rader der alle tre mangler, (c) gruppe-median for resten.</li>
+    <li>Begrunnelsen, med tall: <em>«median fremfor gjennomsnitt fordi snittet er 54 × medianen»</em>.</li>
+    <li>Et <code>imputed</code>-flagg i datasettet, så du kan vise hvor mange rader som ble berørt, og holde dem utenfor senere hvis du vil.</li>
+  </ol>
+
+  <div class="quiz" data-quiz="q3"></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="ch" id="k4">
+  <div class="ch-head"><span class="ch-num">04</span><h2>Outliers: ekte eller feil?</h2></div>
+  <p class="ch-aim">Mål: oppgave 3 — detektere med IQR og z-score, og forsvare fjern / capp / transformer.</p>
+
+  <p>Det avgjørende spørsmålet er ikke «hvordan finner jeg outliers», men <strong>«er dette en målefeil eller en ekte, sjelden verdi?»</strong>. Metodene under finner begge deler — de kan ikke skille. Det må du gjøre, med kunnskap om domenet.</p>
+
+  <h3>De to detektorene</h3>
+  <p><strong>IQR-regelen.</strong> Med Q1 og Q3 som første og tredje kvartil, og IQR = Q3 − Q1, flagges alt utenfor</p>
+  <pre><code>[ Q1 − k·IQR ,  Q3 + k·IQR ]     k = 1.5 er standard, k = 3.0 = "ekstrem"</code></pre>
+  <p>Kvartiler påvirkes ikke av hvor ekstreme halene er, så grensene er <em>robuste</em>. Regelen forutsetter ikke normalfordeling, men k = 1.5 er kalibrert slik at den flagger ca. 0,7 % av en normalfordeling. På en tunghalet fordeling flagger den langt mer — ikke fordi dataene er feil, men fordi forutsetningen ikke passer.</p>
+
+  <p><strong>z-score.</strong> z = (x − x̄) / s, flagg når |z| &gt; 3. Problemet er sirkulært: både x̄ og s regnes ut <em>med</em> outlierne. Én ekstrem verdi blåser opp s og skjuler dermed seg selv — kalt <em>masking</em>. På en skjev fordeling flagger z-score også bare den ene halen, siden ingen verdier kan ligge 3 standardavvik under et snitt som er nær null.</p>
+
+  <div class="fig">
+    <div class="fig-head"><h4>Figur 4 · Outlier-laben</h4><span class="tag">interaktiv</span></div>
+    <div class="fig-body">
+      <div class="ctrls">
+        <div class="seg" role="group" aria-label="Metode">
+          <button type="button" class="ompick" data-m="iqr" aria-pressed="true">IQR</button>
+          <button type="button" class="ompick" data-m="z" aria-pressed="false">z-score</button>
+        </div>
+        <div class="seg" role="group" aria-label="Skala">
+          <button type="button" class="ospick" data-s="raw" aria-pressed="true">Rå verdier</button>
+          <button type="button" class="ospick" data-s="log" aria-pressed="false">log₁₀ først</button>
+        </div>
+        <div class="ctrl">
+          <label for="o-k">Terskel <b id="o-k-v">k = 1.5</b></label>
+          <input type="range" id="o-k" min="0.5" max="4" step="0.25" value="1.5">
+        </div>
+      </div>
+      <canvas id="outlab" height="250" aria-label="Punktsverm med IQR-grenser"></canvas>
+      <div class="readout">
+        <div class="stat warn"><span class="k">Flagget</span><span class="v" id="o-pct">–</span></div>
+        <div class="stat"><span class="k">Antall</span><span class="v" id="o-n">–</span></div>
+        <div class="stat"><span class="k">Nedre grense</span><span class="v" id="o-lo">–</span></div>
+        <div class="stat"><span class="k">Øvre grense</span><span class="v" id="o-hi">–</span></div>
+      </div>
+    </div>
+    <figcaption>Samme 1 200 simulerte produksjonsverdier hele veien. Bytt til log-skala og se hvor mange færre punkter som flagges — verdiene endret seg ikke, bare hvilken fordeling regelen sammenligner dem med.</figcaption>
+  </div>
+
+  <p>Det er hovedpoenget i hele kapittelet: <strong>«outlier» er ikke en egenskap ved verdien, men ved forholdet mellom verdien og modellen du måler den mot.</strong> Her er de faktiske andelene i crop1:</p>
+
+  <div class="tw"><table>
+    <caption>Andel verdier flagget i crop1, beregnet per vekst.</caption>
+    <thead><tr><th>Metode</th><th class="num">Areal og produksjon</th><th class="num">Avling</th></tr></thead>
+    <tbody>
+      <tr><td>IQR, k = 1.5, rå skala</td><td class="num">13–14 %</td><td class="num">4,5 %</td></tr>
+      <tr class="hl"><td>IQR, k = 1.5, på log₁₀</td><td class="num">1,3–1,4 %</td><td class="num">2,9 %</td></tr>
+      <tr><td>|z| &gt; 3</td><td class="num">2,1–2,2 %</td><td class="num">1,5 %</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note key"><span class="lab">Detekter per gruppe</span>
+  Kjører du IQR på alle vekster samlet, sammenligner du sukkerrør med vanilje — da måler du forskjellen <em>mellom</em> vekster, ikke uvanlige verdier <em>innenfor</em> en vekst. Grupper på <code>Item</code>. Det er en av de enkleste og mest overbevisende forbedringene du kan gjøre i oppgave 3.</div>
+
+  <h3>De tre handlingene</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Handling</th><th>Når</th><th>Konsekvens</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Fjern</strong></td><td>Verdien er umulig: negativt areal, avling på 10 000 t/ha, år 2205</td><td>Mister rader; skjevhet hvis de ikke egentlig var feil</td></tr>
+      <tr><td><strong>Capp</strong> (winsorisering)</td><td>Verdien er trolig ekte, men du vil begrense innflytelsen</td><td>Beholder raden, men endrer en observert verdi — må rapporteres</td></tr>
+      <tr class="hl"><td><strong>Transformer</strong> (log)</td><td>Fordelingen er tunghalet og alt er ekte</td><td>Ingen data endres eller mistes; tolkningen blir multiplikativ</td></tr>
+      <tr><td><strong>Behold</strong></td><td>Verdiene er ekte og halen er selve fenomenet</td><td>Krever robuste metoder videre</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>I crop1 er 45 millioner hektar ris i India ekte. 769 millioner tonn sukkerrør i Brasil er ekte. Nederlandske veksthusagurker på 743 t/ha er ekte — men de kommer fra et annet produksjonssystem enn åkerbruk, og det er et reelt argument for enten å behandle dem separat eller nevne dem eksplisitt. Det er dette som er «justify your decisions».</p>
+
+  <div class="note trap"><span class="lab">Nullene</span>
+  31 rader har produksjon 0 og avling 0 — avlingssvikt, ikke feil. Null tåler ikke logaritme (log 0 = −∞). Bruk <code>log1p</code>, eller hold nullene utenfor og si at du gjorde det. Å la <code>NaN</code> snike seg inn her er en klassisk stille feil.</div>
+
+  <div class="quiz" data-quiz="q4"></div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="ch" id="k5">
+  <div class="ch-head"><span class="ch-num">05</span><h2>Encoding av kategorier</h2></div>
+  <p class="ch-aim">Mål: oppgave 4a — velge mellom label og one-hot, og begrunne det.</p>
+
+  <p>En modell regner med tall. <code>Area = "Afghanistan"</code> må bli tall, og hvordan du gjør det, bestemmer hva modellen tror om kategoriene.</p>
+
+  <div class="fig">
+    <div class="fig-head"><h4>Figur 5 · Label vs. one-hot</h4><span class="tag">interaktiv</span></div>
+    <div class="fig-body">
+      <div class="ctrls">
+        <div class="seg" role="group" aria-label="Encoding">
+          <button type="button" class="encpick" data-e="label" aria-pressed="true">Label encoding</button>
+          <button type="button" class="encpick" data-e="onehot" aria-pressed="false">One-hot encoding</button>
+        </div>
+      </div>
+      <div class="tw" id="enc-table"></div>
+      <div class="readout">
+        <div class="stat"><span class="k">Kolonner (demo)</span><span class="v" id="enc-cols">–</span></div>
+        <div class="stat"><span class="k">På hele crop1</span><span class="v" id="enc-full">–</span></div>
+        <div class="stat"><span class="k">Modellen antar</span><span class="v" id="enc-assume" style="font-size:12px">–</span></div>
+      </div>
+      <p id="enc-note" style="margin:14px 0 0;font-size:15px;color:var(--ink-2);max-width:62ch"></p>
+    </div>
+    <figcaption>Fem rader fra crop1. Label encoding gir én kolonne og en påstått rekkefølge; one-hot gir én kolonne per kategori og ingen rekkefølge.</figcaption>
+  </div>
+
+  <p><strong>Label encoding</strong> gir hver kategori et heltall: Afghanistan = 0, Albania = 1, Algerie = 2. For en lineær modell betyr det at Algerie er «dobbelt så mye» som Albania, og at gjennomsnittet av Afghanistan og Algerie er Albania. Det er tull for land. Men det er helt riktig for <em>ordinale</em> variabler, der rekkefølgen er ekte: liten &lt; medium &lt; stor, eller grunnskole &lt; videregående &lt; universitet.</p>
+
+  <p><strong>One-hot encoding</strong> gir én binær kolonne per kategori og påstår ingen rekkefølge. Prisen er bredde: 200 land + 117 vekster = <strong>317 nye kolonner</strong>. Med 88 735 rader er det håndterbart, men det er verdt å nevne, og det er et argument for å slippe å one-hote <code>Year</code>.</p>
+
+  <div class="note key"><span class="lab">Beslutningsregelen</span>
+  Har kategoriene en <strong>naturlig rekkefølge</strong>? → label/ordinal encoding. Har de det ikke? → one-hot. Er kardinaliteten så høy at one-hot blir upraktisk (tusenvis av kategorier)? → da først vurderer du alternativer som frekvens- eller målencoding — og nevner at målencoding må tilpasses på treningssettet alene, ellers lekker målvariabelen inn.</div>
+
+  <div class="note"><span class="lab">To detaljer som viser modenhet</span>
+  <strong>Dummy-fellen:</strong> med alle 200 land-kolonner er én av dem alltid utledbar fra de andre (de summerer til 1). For lineær regresjon med konstantledd gir det perfekt kollinearitet — derfor <code>drop_first=True</code>. Tre-baserte modeller bryr seg ikke. <strong>Ukjente kategorier:</strong> dukker det opp et land i testsettet som ikke fantes i treningssettet, må encoderen vite hva den skal gjøre (<code>handle_unknown="ignore"</code>).</div>
+
+  <div class="quiz" data-quiz="q5"></div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="ch" id="k6">
+  <div class="ch-head"><span class="ch-num">06</span><h2>Skalering</h2></div>
+  <p class="ch-aim">Mål: oppgave 4b — velge skaleringsmetode og forklare hvorfor det trengs.</p>
+
+  <p>Areal måles i hektar (0 til 45 millioner). Avling måles i hektogram per hektar (0 til 50 millioner). <code>Year</code> går fra 2010 til 2020. Uten skalering <em>dominerer</em> kolonnene med størst tallverdi alle algoritmer som bruker avstand eller gradienter.</p>
+
+  <h3>Hvem trenger skalering?</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Modell</th><th>Trenger skalering?</th><th>Hvorfor</th></tr></thead>
+    <tbody>
+      <tr><td>k-NN, k-means, SVM</td><td><strong>Ja, kritisk</strong></td><td>Euklidsk avstand domineres av kolonnen med størst tallverdi</td></tr>
+      <tr><td>Nevrale nett, gradient descent</td><td><strong>Ja</strong></td><td>Ujevn skala gir treg og ustabil konvergens</td></tr>
+      <tr><td>Ridge, Lasso, PCA</td><td><strong>Ja</strong></td><td>Straffeledd og varians avhenger direkte av skalaen</td></tr>
+      <tr><td>Lineær regresjon (OLS)</td><td>Nei, for prediksjon</td><td>Koeffisientene justerer seg selv</td></tr>
+      <tr><td>Beslutningstrær, random forest, gradient boosting</td><td>Nei</td><td>Splitter på rangering, ikke på avstand</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note key"><span class="lab">Slik formulerer du det i rapporten</span>
+  «Skalering er nødvendig» er halvveis. Full uttelling: <em>«Uten skalering ville produksjon (opp til 7,7 × 10⁸) dominert år (2 × 10³) fullstendig i enhver avstandsbasert modell, og gradientnedstigning ville konvergert svært tregt. Vi valgte X fordi …»</em></div>
+
+  <h3>De tre standardmetodene</h3>
+  <pre><code>Min–Max      x' = (x − min) / (max − min)            → alltid i [0, 1]
+Standard     x' = (x − mean) / std                   → snitt 0, std 1  (z-score)
+Robust       x' = (x − median) / IQR                 → median 0, robust mot haler</code></pre>
+
+  <p>Forskjellen ser du best når det ligger en outlier i dataene. Slå den av og på:</p>
+
+  <div class="fig">
+    <div class="fig-head"><h4>Figur 6 · Hva outlieren gjør med hver skalering</h4><span class="tag">interaktiv</span></div>
+    <div class="fig-body">
+      <div class="ctrls">
+        <div class="seg" role="group" aria-label="Outlier">
+          <button type="button" id="sc-off" aria-pressed="true">Uten outlier</button>
+          <button type="button" id="sc-on" aria-pressed="false">Med én outlier</button>
+        </div>
+        <div class="seg" role="group" aria-label="Log">
+          <button type="button" id="sc-nolog" aria-pressed="true">Rå verdier</button>
+          <button type="button" id="sc-log" aria-pressed="false">log₁₀ først</button>
+        </div>
+      </div>
+      <div id="scale-tracks"></div>
+      <p id="sc-note" style="margin:16px 0 0;font-size:15px;color:var(--ink-2);max-width:62ch"></p>
+    </div>
+    <figcaption>Ni produksjonsverdier plassert langs hver skala. Med én ekstrem verdi klemmer Min–Max alle de andre sammen i en klump nær 0, standardisering blir dratt men holder formen, robust skalering står nesten stille — og log-transformasjon fjerner problemet ved roten.</figcaption>
+  </div>
+
+  <div class="note trap"><span class="lab">Den viktigste kodelinjen i hele oppgaven</span>
+  <code>fit</code> på <strong>trening</strong>, <code>transform</code> på <strong>begge</strong>. Kaller du <code>fit_transform</code> på testsettet, har du brukt testsettets minimum, maksimum og standardavvik — informasjon du ikke skulle hatt. Bruk en <code>Pipeline</code>, så er det umulig å glemme.</div>
+
+  <pre><code>from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+pre = ColumnTransformer([
+    ("kat", OneHotEncoder(handle_unknown="ignore"), ["Area", "Item"]),
+    ("num", StandardScaler(), ["area_harvested_ha", "Year"]),
+])
+pipe = Pipeline([("pre", pre), ("modell", ...)])
+pipe.fit(X_train, y_train)     <span class="cm"># fit skjer bare her</span>
+pipe.score(X_test, y_test)     <span class="cm"># testsettet blir bare transformert</span></code></pre>
+
+  <div class="quiz" data-quiz="q6"></div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section class="ch" id="k7">
+  <div class="ch-head"><span class="ch-num">07</span><h2>Splitting og lekkasje</h2></div>
+  <p class="ch-aim">Mål: oppgave 5 — splitte riktig og forklare koblingen til overtilpasning.</p>
+
+  <p>Overtilpasning er når modellen lærer <em>støyen</em> i treningsdataene i stedet for mønsteret. En modell som har sett alle dataene, kan i prinsippet pugge dem, og da måler treningsfeilen ingenting. Testsettet er derfor ikke en formalitet — det er den eneste ærlige målingen du har, og den er bare ærlig så lenge modellen aldri har sett de radene, <strong>heller ikke indirekte</strong>.</p>
+
+  <p>«Indirekte» er der de fleste går i baret. Datalekkasje er informasjon fra testsettet som sniker seg inn i treningen:</p>
+  <ul>
+    <li><strong>Preprosesseringslekkasje:</strong> skalering eller imputering tilpasset på hele datasettet.</li>
+    <li><strong>Mållekkasje:</strong> en feature som er utledet fra målvariabelen. I crop1: bruker du <em>både</em> produksjon og areal til å predikere avling, gir du bort fasiten, siden avling = produksjon × 10 000 / areal.</li>
+    <li><strong>Gruppelekkasje:</strong> nesten identiske rader havner på hver sin side av splitten.</li>
+  </ul>
+
+  <p>Det siste er den store i dette datasettet. crop1 er <em>paneldata</em>: 8 316 tidsserier (land × vekst), typisk 11 år hver, og avlingen varierer lite innen én serie. En tilfeldig 80/20-split legger da Kenyas mais 2014 i treningssettet og Kenyas mais 2015 i testsettet — og modellen kan «huske» seg til svaret. Testscoren blir for optimistisk.</p>
+
+  <div class="fig">
+    <div class="fig-head"><h4>Figur 7 · Tre splitter på paneldata</h4><span class="tag">interaktiv</span></div>
+    <div class="fig-body">
+      <div class="ctrls">
+        <div class="seg" role="group" aria-label="Splittestrategi">
+          <button type="button" class="sppick" data-s="rand" aria-pressed="true">Tilfeldig 80/20</button>
+          <button type="button" class="sppick" data-s="group" aria-pressed="false">Gruppert (land × vekst)</button>
+          <button type="button" class="sppick" data-s="time" aria-pressed="false">Tidsbasert (2019–20)</button>
+        </div>
+      </div>
+      <div id="split-grid"></div>
+      <div class="legend">
+        <span><i style="background:var(--moss)"></i> Trening</span>
+        <span><i style="background:var(--rust)"></i> Test</span>
+      </div>
+      <div class="readout">
+        <div class="stat"><span class="k">Testandel</span><span class="v" id="sp-share">–</span></div>
+        <div class="stat"><span class="k">Serier delt på tvers</span><span class="v" id="sp-leak">–</span></div>
+        <div class="stat"><span class="k">Målt R² (illustrasjon)</span><span class="v" id="sp-r2">–</span></div>
+      </div>
+      <p id="sp-note" style="margin:16px 0 0;font-size:15px;color:var(--ink-2);max-width:62ch"></p>
+    </div>
+    <figcaption>Hver rad er én tidsserie (ett land, én vekst), hver rute ett år fra 2010 til 2020. R²-tallene er illustrasjon, ikke målinger fra crop1 — men størrelsesorden på forskjellen er reell for paneldata.</figcaption>
+  </div>
+
+  <div class="note key"><span class="lab">Velg og begrunn</span>
+  Alle tre splittene kan forsvares. Det som gir poeng er at du sier <em>hva du vil vite</em>: skal modellen generalisere til <strong>nye land og vekster</strong> (gruppert split), til <strong>fremtidige år</strong> (tidsbasert), eller bare interpolere i et kjent panel (tilfeldig)? Velg én, si hvorfor, og nevn hva den andre ville gitt.</div>
+
+  <pre><code>from sklearn.model_selection import train_test_split, GroupShuffleSplit
+
+<span class="cm"># tilfeldig — stratify holder klassebalansen ved klassifikasjon</span>
+X_tr, X_te = train_test_split(X, test_size=0.2, random_state=42)
+
+<span class="cm"># gruppert — hele serien holdes samlet på én side</span>
+grupper = df["Area"] + "|" + df["Item"]
+tr, te = next(GroupShuffleSplit(test_size=0.2, random_state=42).split(X, groups=grupper))</code></pre>
+
+  <p>To siste detaljer verdt en setning hver: <code>random_state</code> gjør splitten reproduserbar (uten den får sensor andre tall enn du); og skal du velge hyperparametre, trenger du et <strong>valideringssett</strong> eller kryssvalidering på treningsdelen — testsettet skal bare røres én gang, helt til slutt.</p>
+
+  <div class="quiz" data-quiz="q7"></div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section class="ch" id="k8">
+  <div class="ch-head"><span class="ch-num">08</span><h2>PCA — bonusen</h2></div>
+  <p class="ch-aim">Mål: oppgave 6 — kjøre PCA riktig og ha noe reelt å diskutere.</p>
+
+  <p>PCA finner nye akser (hovedkomponenter) som er ortogonale på hverandre, rangert etter hvor mye av variansen de fanger. Den første komponenten peker i retningen der dataene sprer seg mest. Poenget er å beholde de få første og kaste resten, uten å miste mye informasjon.</p>
+
+  <p>Tre ting må være på plass, og de to første er der folk mister poeng:</p>
+  <ol class="body">
+    <li><strong>Standardiser først.</strong> PCA maksimerer varians, og varians avhenger av enhet. Måler du areal i hektar og produksjon i tonn, bestemmer enhetsvalget hovedkomponentene. Uten standardisering gjør du PCA på kovariansmatrisen i stedet for korrelasjonsmatrisen, som sjelden er det du mener.</li>
+    <li><strong>Fit på treningssettet.</strong> Samme regel som all annen transformasjon.</li>
+    <li><strong>PCA er ikke feature selection.</strong> Den lager nye variabler som er lineærkombinasjoner av alle de gamle. Tolkbarheten forsvinner — det er den viktigste kostnaden, og et godt diskusjonspoeng.</li>
+  </ol>
+
+  <div class="fig">
+    <div class="fig-head"><h4>Figur 8 · Forklart varians i crop1</h4><span class="tag">interaktiv</span></div>
+    <div class="fig-body">
+      <div class="ctrls">
+        <div class="seg" role="group" aria-label="Skala for PCA">
+          <button type="button" id="pc-raw" aria-pressed="true">Standardiserte rå verdier</button>
+          <button type="button" id="pc-log" aria-pressed="false">Standardiserte log-verdier</button>
+        </div>
+      </div>
+      <div id="pca-bars"></div>
+      <p id="pca-note" style="margin:16px 0 0;font-size:15px;color:var(--ink-2);max-width:62ch"></p>
+    </div>
+    <figcaption>PCA på de tre målekolonnene. Tallene er illustrasjon av et reelt fenomen i crop1: på log-skala gjelder log(avling) = log(produksjon) − log(areal) + 4 <em>eksakt</em> i alle rader der alle tre er positive.</figcaption>
+  </div>
+
+  <div class="note key"><span class="lab">Gullet i dette datasettet</span>
+  De tre målekolonnene er egentlig bare <strong>to</strong> uavhengige størrelser. På log-skala er den tredje en eksakt lineærkombinasjon av de to andre, så PC3 får tilnærmet null varians — en perfekt konkret illustrasjon av hva PCA oppdager og hvorfor dimensjonsreduksjon er mulig. På rå skala er sammenhengen ikke lineær, så PCA ser den ikke like tydelig. Det er hele diskusjonen oppgave 6 ber om, og den er spesifikk for <em>dine</em> data.</div>
+
+  <p>Vil du ha et tall å rapportere, er standardsvaret antall komponenter som trengs for å forklare 95 % av variansen:</p>
+  <pre><code>pca = PCA(n_components=0.95).fit(X_train_scaled)
+print(pca.n_components_, pca.explained_variance_ratio_.cumsum())</code></pre>
+
+  <div class="quiz" data-quiz="q8"></div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section class="ch" id="k9">
+  <div class="ch-head"><span class="ch-num">09</span><h2>Rapporten</h2></div>
+  <p class="ch-aim">Mål: gjøre arbeidet om til poeng innenfor 3 000 ord.</p>
+
+  <p>Oppgaveteksten er tydelig: <em>«Include the code only when it is absolutely necessary»</em> og <em>«There are no extra points for extra text»</em>. Kode som bare viser at du kan kalle <code>fillna</code>, koster ord og gir ingenting. Kode som viser en <em>regel</em> du beskrev i teksten, forsvarer plassen sin.</p>
+
+  <h3>En struktur som følger poengene</h3>
+  <div class="tw"><table>
+    <caption>Foreslått ordbudsjett. Vekt etter poeng, ikke etter hvor gøy delen var.</caption>
+    <thead><tr><th>Del</th><th class="num">Poeng</th><th class="num">Ordbudsjett</th><th>Innhold</th></tr></thead>
+    <tbody>
+      <tr><td>Datasett og oppsett</td><td class="num">–</td><td class="num">300</td><td>Kilde, hva en rad er, trimming, hvorfor</td></tr>
+      <tr><td>1 Utforskning</td><td class="num">10</td><td class="num">350</td><td>2–3 tabeller, 1–2 figurer, kort tekst</td></tr>
+      <tr><td>2 Manglende verdier</td><td class="num">20</td><td class="num">550</td><td>Mønster, regel, begrunnelse</td></tr>
+      <tr><td>3 Outliers</td><td class="num">20</td><td class="num">550</td><td>Begge metodene, andeler, valgt handling</td></tr>
+      <tr class="hl"><td>4 Encoding og skalering</td><td class="num">30</td><td class="num">750</td><td>To begrunnelser; her har du råd til å være grundig</td></tr>
+      <tr><td>5 Splitting</td><td class="num">10</td><td class="num">300</td><td>Strategi, lekkasje, overtilpasning</td></tr>
+      <tr><td>6 PCA</td><td class="num">10</td><td class="num">200</td><td>Forklart varians + diskusjon</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Sjekkliste før innlevering</h3>
+  <ul class="check" id="checklist"></ul>
+
+  <div class="note trap"><span class="lab">Vanligste tap av poeng</span>
+  Metoden er riktig, men begrunnelsen mangler (−10 per deloppgave). Figurer uten aksetekst eller enhet. Tall i teksten som ikke stemmer med tabellen. Påstander om «modellen» uten at du noen gang sa hva som skal predikeres. Ingen av disse handler om koding.</div>
+
+  <div class="quiz" data-quiz="q9"></div>
+</section>
+
+<!-- ============ EKSAMEN ============ -->
+<section class="ch" id="k10">
+  <div class="ch-head"><span class="ch-num">10</span><h2>Sluttprøven</h2></div>
+  <p class="ch-aim">Mål: sjekke at du kan gjøre oppgaven uten å slå opp.</p>
+  <p>Tolv spørsmål på tvers av kapitlene, og tre langsvar som ligner på det du faktisk skal skrive. Klarer du disse uten å bla opp, er du klar for oppgaven.</p>
+  <div class="quiz" data-quiz="exam"></div>
+
+  <footer>
+    <p><strong>Ferdig?</strong> Da har du hele kjeden: hva en rad er, hvordan du beskriver den, hvordan du fyller hullene, hva du gjør med halene, hvordan kategorier og skalaer blir tall, hvor splitten må ligge, og hva PCA egentlig svarer på. Resten er å skrive det ned med <em>dine</em> tall.</p>
+    <p class="top"><button class="btn" id="resetall" type="button">Nullstill alle svar</button></p>
+  </footer>
+</section>
+</main>
+</div>
+
+<script>
+/* ============================================================
+   Data: seeded lognormal samples matched to crop1 quartiles
+   ============================================================ */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function normPair(rng){let u=0,v=0;while(u===0)u=rng();while(v===0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function lognormalSample(n,median,q1,q3,seed){
+  const rng=mulberry32(seed), mu=Math.log(median), sigma=Math.log(q3/q1)/(2*0.6744898), out=[];
+  for(let i=0;i<n;i++) out.push(Math.exp(mu+sigma*normPair(rng)));
+  return out;
+}
+const COLS={
+  prod:{label:"Produksjon",unit:"tonn",median:19067,q1:1825,q3:143400,seed:7},
+  area:{label:"Høstet areal",unit:"ha",median:3394,q1:418,q3:24009,seed:19},
+  yield:{label:"Avling",unit:"hg/ha",median:58692,q1:18586,q3:148797,seed:31}
+};
+const SAMPLES={};
+for(const k in COLS){const c=COLS[k];SAMPLES[k]=lognormalSample(4000,c.median,c.q1,c.q3,c.seed);}
+
+const quantile=(sorted,p)=>{const i=(sorted.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return lo===hi?sorted[lo]:sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo)};
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const std=a=>{const m=mean(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1))};
+const skew=a=>{const m=mean(a),s=std(a);return a.reduce((t,x)=>t+((x-m)/s)**3,0)/a.length};
+const fmt=x=>{
+  const ax=Math.abs(x);
+  if(ax>=1e6) return (x/1e6).toLocaleString("nb-NO",{maximumFractionDigits:1})+" M";
+  if(ax>=1000) return Math.round(x).toLocaleString("nb-NO");
+  if(ax>=10) return x.toFixed(0);
+  if(ax>=1) return x.toFixed(2);
+  return x.toFixed(3);
+};
+const tok=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* canvas helper */
+function setup(cv){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  // Lås basishøyden første gang: å sette cv.height overskriver height-attributtet,
+  // så uten dette vokser figuren med dpr for hver opptegning.
+  if(!cv.dataset.baseH) cv.dataset.baseH=cv.getAttribute("height")||"280";
+  const h=parseInt(cv.dataset.baseH,10);
+  const w=cv.clientWidth||600;
+  cv.style.height=h+"px";
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  const ctx=cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  return {ctx,w,h};
+}
+const redrawers=[];
+function onRedraw(fn){redrawers.push(fn);fn();}
+function redrawAll(){redrawers.forEach(f=>{try{f()}catch(e){}})}
+window.addEventListener("resize",()=>{clearTimeout(window.__rt);window.__rt=setTimeout(redrawAll,140)});
+try{window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redrawAll)}catch(e){}
+new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+/* segmented control helper */
+function seg(buttons,onPick){
+  buttons.forEach(b=>b.addEventListener("click",()=>{
+    buttons.forEach(o=>o.setAttribute("aria-pressed",String(o===b)));
+    onPick(b);
+  }));
+}
+
+/* ============================================================
+   Fig 1 — pivot
+   ============================================================ */
+(function(){
+  const host=document.getElementById("pivot-table");
+  const long=[
+    ["Afghanistan","Almonds, with shell",2010,"Area harvested","ha","11 210"],
+    ["Afghanistan","Almonds, with shell",2010,"Production","tonnes","56 000"],
+    ["Afghanistan","Almonds, with shell",2010,"Yield","hg/ha","49 955"],
+    ["Afghanistan","Almonds, with shell",2011,"Area harvested","ha","13 469"],
+    ["Afghanistan","Almonds, with shell",2011,"Production","tonnes","60 611"],
+    ["Afghanistan","Almonds, with shell",2011,"Yield","hg/ha","45 000"]
+  ];
+  const wide=[
+    ["Afghanistan","Almonds, with shell",2010,"11 210","56 000","49 955"],
+    ["Afghanistan","Almonds, with shell",2011,"13 469","60 611","45 000"]
+  ];
+  function render(mode){
+    const head = mode==="long"
+      ? ["Area","Item","Year","Element","Unit","Value"]
+      : ["Area","Item","Year","area_harvested_ha","production_tonnes","yield_hg_per_ha"];
+    const rows = mode==="long"?long:wide;
+    const numCols = mode==="long"?[5]:[3,4,5];
+    host.innerHTML="<table><thead><tr>"+head.map((h,i)=>
+      `<th class="${numCols.includes(i)?'num':''}">${h}</th>`).join("")+"</tr></thead><tbody>"+
+      rows.map(r=>"<tr>"+r.map((c,i)=>`<td class="${numCols.includes(i)?'num':''}">${c}</td>`).join("")+"</tr>").join("")+
+      "</tbody></table>";
+    document.getElementById("pv-rows").textContent = mode==="long"?"1 903 000":"98 101";
+    document.getElementById("pv-cols").textContent = mode==="long"?"6":"6";
+    document.getElementById("pv-unit").textContent = mode==="long"?"én måling":"land × vekst × år";
+    document.getElementById("pivot-cap").textContent = mode==="long"
+      ? "I langt format er Afghanistans mandler i 2010 spredt over tre rader — én per måling. Kolonnen Element sier hva tallet er."
+      : "Etter pivoten er de tre målingene kolonner, og hver rad er én observasjon: ett land, én vekst, ett år. Nå kan datasettet modelleres.";
+  }
+  const a=document.getElementById("fmt-long"), b=document.getElementById("fmt-wide");
+  seg([a,b],btn=>render(btn===a?"long":"wide"));
+  render("long");
+})();
+
+/* ============================================================
+   Fig 2 — histogram raw vs log
+   ============================================================ */
+(function(){
+  const cv=document.getElementById("hist");
+  let logScale=false, col="prod";
+  function draw(){
+    const data=SAMPLES[col], c=COLS[col];
+    const vals=logScale?data.map(v=>Math.log10(Math.max(v,1e-6))):data;
+    const {ctx,w,h}=setup(cv);
+    const padL=42,padR=14,padT=12,padB=42;
+    const lo=logScale?Math.min(...vals):0;
+    const hi=logScale?Math.max(...vals):quantile([...data].sort((x,y)=>x-y),0.999);
+    const nb=44, bins=new Array(nb).fill(0);
+    vals.forEach(v=>{const i=Math.floor((v-lo)/(hi-lo)*nb);if(i>=0&&i<nb)bins[i]++;else if(v>=hi)bins[nb-1]++});
+    const maxb=Math.max(...bins);
+    const pw=w-padL-padR, ph=h-padT-padB;
+    // axes
+    ctx.strokeStyle=tok("--line-strong");ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+ph);ctx.lineTo(padL+pw,padT+ph);ctx.stroke();
+    // bars
+    ctx.fillStyle=logScale?tok("--moss"):tok("--rust");
+    const bw=pw/nb;
+    bins.forEach((b,i)=>{const bh=b/maxb*ph;ctx.fillRect(padL+i*bw+0.5,padT+ph-bh,Math.max(bw-1.5,1),bh)});
+    // labels
+    ctx.fillStyle=tok("--muted");ctx.font='11px "IBM Plex Mono", monospace';ctx.textAlign="center";
+    for(let t=0;t<=4;t++){
+      const x=padL+pw*t/4, v=lo+(hi-lo)*t/4;
+      ctx.fillText(logScale?("10^"+v.toFixed(1)):fmt(v),x,padT+ph+16);
+    }
+    ctx.textAlign="left";
+    ctx.fillText(c.label+" ("+c.unit+")",padL,h-8);
+    ctx.textAlign="right";
+    ctx.fillText(maxb+" obs",padL-6,padT+8);
+    ctx.fillText("0",padL-6,padT+ph+3);
+    // median marker
+    const med=quantile([...vals].sort((x,y)=>x-y),0.5);
+    const mx=padL+(med-lo)/(hi-lo)*pw;
+    if(mx>padL&&mx<padL+pw){
+      ctx.strokeStyle=tok("--ink");ctx.setLineDash([4,3]);
+      ctx.beginPath();ctx.moveTo(mx,padT);ctx.lineTo(mx,padT+ph);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=tok("--ink");ctx.textAlign="left";ctx.fillText(" median",mx+2,padT+10);
+    }
+    // stats (always on raw values)
+    const sorted=[...data].sort((x,y)=>x-y);
+    document.getElementById("h-med").textContent=fmt(quantile(sorted,0.5));
+    document.getElementById("h-mean").textContent=fmt(mean(data));
+    document.getElementById("h-ratio").textContent=(mean(data)/quantile(sorted,0.5)).toFixed(1)+"×";
+    document.getElementById("h-skew").textContent=skew(logScale?vals:data).toFixed(2);
+  }
+  const r=document.getElementById("sk-raw"), l=document.getElementById("sk-log");
+  seg([r,l],b=>{logScale=(b===l);draw()});
+  seg([...document.querySelectorAll(".colpick")],b=>{col=b.dataset.col;draw()});
+  onRedraw(draw);
+})();
+
+/* ============================================================
+   Fig 3 — imputation impact
+   ============================================================ */
+(function(){
+  const cv=document.getElementById("imphist");
+  const base=SAMPLES.yield.slice(0,2500).map(v=>Math.log10(Math.max(v,1)));
+  const rng=mulberry32(101), u=base.map(()=>rng());
+  let pct=0.20, method="drop";
+  function draw(){
+    const missing=u.map(x=>x<pct);
+    const observed=base.filter((_,i)=>!missing[i]);
+    let result;
+    if(method==="drop") result=observed;
+    else{
+      const fill = method==="mean" ? mean(observed) : quantile([...observed].sort((a,b)=>a-b),0.5);
+      result=base.map((v,i)=>missing[i]?fill:v);
+    }
+    const {ctx,w,h}=setup(cv);
+    const padL=36,padR=14,padT=12,padB=34, pw=w-padL-padR, ph=h-padT-padB;
+    const lo=Math.min(...base), hi=Math.max(...base), nb=40;
+    const binOf=a=>{const b=new Array(nb).fill(0);a.forEach(v=>{const i=Math.min(nb-1,Math.max(0,Math.floor((v-lo)/(hi-lo)*nb)));b[i]++});return b};
+    const b0=binOf(base), b1=binOf(result);
+    const maxb=Math.max(...b0,...b1), bw=pw/nb;
+    ctx.strokeStyle=tok("--line-strong");ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(padL,padT+ph);ctx.lineTo(padL+pw,padT+ph);ctx.stroke();
+    // baseline outline
+    ctx.strokeStyle=tok("--line-strong");ctx.lineWidth=1.2;ctx.beginPath();
+    b0.forEach((b,i)=>{const x=padL+i*bw,y=padT+ph-b/maxb*ph;if(i===0)ctx.moveTo(x,y);ctx.lineTo(x,y);ctx.lineTo(x+bw,y)});
+    ctx.stroke();
+    ctx.fillStyle=method==="drop"?tok("--moss"):tok("--rust");
+    b1.forEach((b,i)=>{const bh=b/maxb*ph;ctx.fillRect(padL+i*bw+0.5,padT+ph-bh,Math.max(bw-1.5,1),bh)});
+    ctx.fillStyle=tok("--muted");ctx.font='11px "IBM Plex Mono", monospace';ctx.textAlign="center";
+    for(let t=0;t<=4;t++){const v=lo+(hi-lo)*t/4;ctx.fillText("10^"+v.toFixed(1),padL+pw*t/4,padT+ph+16)}
+    ctx.textAlign="left";ctx.fillText("log₁₀(avling, hg/ha)",padL,h-6);
+    const s0=std(base), s1=std(result);
+    document.getElementById("im-n").textContent=result.length.toLocaleString("nb-NO");
+    document.getElementById("im-med").textContent=quantile([...result].sort((a,b)=>a-b),0.5).toFixed(3);
+    document.getElementById("im-std").textContent=s1.toFixed(3);
+    const d=(s1/s0-1)*100;
+    const el=document.getElementById("im-dstd");
+    el.textContent=(d>=0?"+":"")+d.toFixed(1)+" %";
+    el.parentElement.className="stat "+(d<-3?"warn":"good");
+  }
+  const sl=document.getElementById("miss-pct");
+  sl.addEventListener("input",()=>{pct=+sl.value/100;document.getElementById("miss-pct-v").textContent=sl.value+" %";draw()});
+  seg([...document.querySelectorAll(".impick")],b=>{method=b.dataset.m;draw()});
+  onRedraw(draw);
+})();
+
+/* ============================================================
+   Fig 4 — outlier lab
+   ============================================================ */
+(function(){
+  const cv=document.getElementById("outlab");
+  const data=SAMPLES.prod.slice(0,1200);
+  const rng=mulberry32(55), jit=data.map(()=>rng());
+  let method="iqr", scale="raw", k=1.5;
+  function draw(){
+    const vals=scale==="log"?data.map(v=>Math.log10(Math.max(v,1))):data;
+    const sorted=[...vals].sort((a,b)=>a-b);
+    let lo,hi;
+    if(method==="iqr"){const q1=quantile(sorted,0.25),q3=quantile(sorted,0.75),iqr=q3-q1;lo=q1-k*iqr;hi=q3+k*iqr}
+    else{const m=mean(vals),s=std(vals);lo=m-k*s;hi=m+k*s}
+    const flags=vals.map(v=>v<lo||v>hi);
+    const nflag=flags.filter(Boolean).length;
+    const {ctx,w,h}=setup(cv);
+    const padL=20,padR=20,padT=18,padB=44, pw=w-padL-padR, ph=h-padT-padB;
+    // x-scale: always display on log axis so points are visible
+    const dlo=Math.log10(Math.max(Math.min(...data),1)), dhi=Math.log10(Math.max(...data));
+    const X=v=>padL+(Math.log10(Math.max(v,1))-dlo)/(dhi-dlo)*pw;
+    const q1r=quantile([...data].sort((a,b)=>a-b),0.25), q3r=quantile([...data].sort((a,b)=>a-b),0.75), medr=quantile([...data].sort((a,b)=>a-b),0.5);
+    // box
+    const boxY=padT+ph*0.12, boxH=26;
+    ctx.fillStyle=tok("--surface-2");ctx.strokeStyle=tok("--line-strong");ctx.lineWidth=1;
+    ctx.fillRect(X(q1r),boxY,X(q3r)-X(q1r),boxH);ctx.strokeRect(X(q1r),boxY,X(q3r)-X(q1r),boxH);
+    ctx.strokeStyle=tok("--ink");ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(X(medr),boxY);ctx.lineTo(X(medr),boxY+boxH);ctx.stroke();
+    // points
+    const pTop=boxY+boxH+16, pH=padT+ph-pTop;
+    data.forEach((v,i)=>{
+      const x=X(v), y=pTop+jit[i]*pH;
+      ctx.fillStyle=flags[i]?tok("--rust"):tok("--moss");
+      ctx.globalAlpha=flags[i]?0.85:0.32;
+      ctx.beginPath();ctx.arc(x,y,flags[i]?2.6:2,0,6.283);ctx.fill();
+    });
+    ctx.globalAlpha=1;
+    // bounds (convert back to raw when log scale used for detection)
+    const rawLo=scale==="log"?Math.pow(10,lo):lo, rawHi=scale==="log"?Math.pow(10,hi):hi;
+    [[rawLo,"nedre"],[rawHi,"øvre"]].forEach(([b,lab])=>{
+      const x=X(Math.max(b,1));
+      if(x<padL-2||x>padL+pw+2) return;
+      ctx.strokeStyle=tok("--rust");ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+      ctx.beginPath();ctx.moveTo(x,padT);ctx.lineTo(x,padT+ph);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=tok("--rust");ctx.font='11px "IBM Plex Mono", monospace';ctx.textAlign=lab==="nedre"?"left":"right";
+      ctx.fillText(lab,x+(lab==="nedre"?3:-3),padT+10);
+    });
+    // axis
+    ctx.strokeStyle=tok("--line-strong");ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(padL,padT+ph);ctx.lineTo(padL+pw,padT+ph);ctx.stroke();
+    ctx.fillStyle=tok("--muted");ctx.font='11px "IBM Plex Mono", monospace';ctx.textAlign="center";
+    for(let e=Math.ceil(dlo);e<=Math.floor(dhi);e++){
+      const x=padL+(e-dlo)/(dhi-dlo)*pw;
+      ctx.beginPath();ctx.moveTo(x,padT+ph);ctx.lineTo(x,padT+ph+4);ctx.stroke();
+      ctx.fillText("10"+["⁰","¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹"][e],x,padT+ph+17);
+    }
+    ctx.textAlign="left";ctx.fillText("produksjon (tonn), vist på log-akse",padL,h-8);
+    document.getElementById("o-pct").textContent=(nflag/data.length*100).toFixed(1)+" %";
+    document.getElementById("o-n").textContent=nflag;
+    document.getElementById("o-lo").textContent=rawLo<=0?"< 0":fmt(rawLo);
+    document.getElementById("o-hi").textContent=fmt(rawHi);
+  }
+  seg([...document.querySelectorAll(".ompick")],b=>{
+    method=b.dataset.m;
+    const sl=document.getElementById("o-k");
+    sl.value=method==="iqr"?1.5:3;
+    k=+sl.value; label();draw();
+  });
+  seg([...document.querySelectorAll(".ospick")],b=>{scale=b.dataset.s;draw()});
+  const sl=document.getElementById("o-k");
+  function label(){document.getElementById("o-k-v").textContent=(method==="iqr"?"k = ":"|z| > ")+(+sl.value).toFixed(2).replace(/0$/,"").replace(/\.$/,"")}
+  sl.addEventListener("input",()=>{k=+sl.value;label();draw()});
+  label();onRedraw(draw);
+})();
+
+/* ============================================================
+   Fig 5 — encoding
+   ============================================================ */
+(function(){
+  const host=document.getElementById("enc-table");
+  const rows=[["Afghanistan","Wheat"],["Albania","Maize"],["Brazil","Sugar cane"],["Afghanistan","Maize"],["Kenya","Wheat"]];
+  const areas=["Afghanistan","Albania","Brazil","Kenya"], items=["Wheat","Maize","Sugar cane"];
+  function render(mode){
+    if(mode==="label"){
+      host.innerHTML="<table><thead><tr><th>Area</th><th class='num'>Area_enc</th><th>Item</th><th class='num'>Item_enc</th></tr></thead><tbody>"+
+        rows.map(r=>`<tr><td>${r[0]}</td><td class="num">${areas.indexOf(r[0])}</td><td>${r[1]}</td><td class="num">${items.indexOf(r[1])}</td></tr>`).join("")+
+        "</tbody></table>";
+      document.getElementById("enc-cols").textContent="2";
+      document.getElementById("enc-full").textContent="2 kolonner";
+      document.getElementById("enc-assume").textContent="Brasil > Albania > Afghanistan";
+      document.getElementById("enc-note").innerHTML="Kompakt, men modellen leser tallene som en <strong>skala</strong>: Brasil (2) er dobbelt så mye som Albania (1), og gjennomsnittet av Afghanistan og Brasil er Albania. For land er det meningsløst. For <em>ordinale</em> kategorier — liten, medium, stor — er det nettopp riktig.";
+    }else{
+      const cols=[...areas.map(a=>"Area_"+a.slice(0,3)),...items.map(i=>"Item_"+i.slice(0,3))];
+      host.innerHTML="<table><thead><tr><th>Area</th><th>Item</th>"+cols.map(c=>`<th class="num">${c}</th>`).join("")+"</tr></thead><tbody>"+
+        rows.map(r=>{
+          const bits=[...areas.map(a=>a===r[0]?1:0),...items.map(i=>i===r[1]?1:0)];
+          return `<tr><td>${r[0]}</td><td>${r[1]}</td>`+bits.map(b=>`<td class="num" style="${b?'color:var(--moss);font-weight:600':'color:var(--muted)'}">${b}</td>`).join("")+"</tr>";
+        }).join("")+"</tbody></table>";
+      document.getElementById("enc-cols").textContent=String(cols.length);
+      document.getElementById("enc-full").textContent="317 kolonner";
+      document.getElementById("enc-assume").textContent="ingen rekkefølge";
+      document.getElementById("enc-note").innerHTML="Ingen falsk rekkefølge — hver kategori er sin egen akse, og alle ligger like langt fra hverandre. Prisen er bredde: 200 land + 117 vekster gir <strong>317 kolonner</strong> på crop1. Matrisen blir tynt besatt (sparse), men det håndterer sklearn fint.";
+    }
+  }
+  seg([...document.querySelectorAll(".encpick")],b=>render(b.dataset.e));
+  render("label");
+})();
+
+/* ============================================================
+   Fig 6 — scaling tracks
+   ============================================================ */
+(function(){
+  const host=document.getElementById("scale-tracks");
+  const baseVals=[900,1800,3200,5400,9000,15000,26000,44000,120000];
+  const OUT=9_000_000;
+  let withOut=false, useLog=false;
+  function render(){
+    let v=withOut?[...baseVals,OUT]:[...baseVals];
+    if(useLog) v=v.map(x=>Math.log10(x));
+    const s=[...v].sort((a,b)=>a-b);
+    const mn=s[0], mx=s[s.length-1], m=mean(v), sd=std(v);
+    const med=quantile(s,0.5), iqr=quantile(s,0.75)-quantile(s,0.25);
+    const methods=[
+      {name:"Min–Max",form:"(x − min) / (max − min)",f:x=>(x-mn)/(mx-mn),ticks:[0,0.5,1]},
+      {name:"Standard (z)",form:"(x − mean) / std",f:x=>(x-m)/sd,ticks:null},
+      {name:"Robust",form:"(x − median) / IQR",f:x=>(x-med)/iqr,ticks:null}
+    ];
+    host.innerHTML=methods.map((mm,mi)=>{
+      const t=v.map(mm.f);
+      const tlo=Math.min(...t), thi=Math.max(...t);
+      const pad=(thi-tlo)*0.06||1;
+      const pos=x=>((x-(tlo-pad))/((thi+pad)-(tlo-pad)))*100;
+      const dots=t.map((x,i)=>{
+        const isOut=withOut&&i===v.length-1;
+        return `<span class="dot${isOut?" out":""}" style="left:${pos(x).toFixed(2)}%" title="${x.toFixed(2)}"></span>`;
+      }).join("");
+      const ticks=[tlo,(tlo+thi)/2,thi].map(x=>`<span class="tick" style="left:${pos(x).toFixed(2)}%">${x.toFixed(2)}</span>`).join("");
+      // clustering measure: share of the axis the non-outlier points occupy
+      const core=t.slice(0,baseVals.length);
+      const spread=(Math.max(...core)-Math.min(...core))/(thi-tlo)*100;
+      return `<div class="track">
+        <div class="tlab"><span>${mm.name} <em style="margin-left:8px">${mm.form}</em></span><em>de ni vanlige verdiene dekker ${spread.toFixed(0)} % av aksen</em></div>
+        <div class="line">${dots}${ticks}</div>
+      </div>`;
+    }).join("");
+    const note=document.getElementById("sc-note");
+    if(!withOut) note.innerHTML="Uten outlier oppfører alle tre seg likt: punktene fordeler seg over hele aksen. Slå på outlieren for å se hvem som tåler den.";
+    else if(useLog) note.innerHTML="På log-skala er outlieren ikke lenger ekstrem — den er bare den største verdien. Alle tre skaleringene fungerer igjen. <strong>Det er derfor «log først, skaler etterpå» er et sterkt svar på oppgave 4b for dette datasettet.</strong>";
+    else note.innerHTML="Min–Max presser nå de ni vanlige verdiene inn i en klump helt til venstre — hele det interessante spennet er borte. Standardisering blir dratt, men beholder mer struktur. <strong>Robust skalering</strong>, som bruker median og IQR, står nesten uberørt.";
+  }
+  const off=document.getElementById("sc-off"), on=document.getElementById("sc-on");
+  seg([off,on],b=>{withOut=(b===on);render()});
+  const nl=document.getElementById("sc-nolog"), yl=document.getElementById("sc-log");
+  seg([nl,yl],b=>{useLog=(b===yl);render()});
+  render();
+})();
+
+/* ============================================================
+   Fig 7 — splitting
+   ============================================================ */
+(function(){
+  const host=document.getElementById("split-grid");
+  const series=[["Kenya","Maize"],["Kenya","Wheat"],["Brazil","Sugar cane"],["Norway","Barley"],["India","Rice"],["Peru","Potatoes"]];
+  const years=11, rng=mulberry32(2024);
+  const randMask=series.map(()=>Array.from({length:years},()=>rng()<0.2));
+  let mode="rand";
+  function render(){
+    host.innerHTML=series.map((s,si)=>{
+      const cells=Array.from({length:years},(_,yi)=>{
+        let test;
+        if(mode==="rand") test=randMask[si][yi];
+        else if(mode==="group") test=(si>=series.length-1);
+        else test=(yi>=years-2);
+        return `<i class="${test?"test":"train"}"></i>`;
+      }).join("");
+      return `<div class="serieslab">${s[0]} · ${s[1]}</div><div class="panelgrid">${cells}</div>`;
+    }).join("")+`<div class="gridlabels"><span>2010</span><span>2015</span><span>2020</span></div>`;
+    const info={
+      rand:{share:"20 %",leak:"6 av 6",r2:"0.97  ↑ for høy",
+        note:"Nesten hver serie har rader på begge sider. Modellen har sett Kenyas mais i 2014 og skal predikere 2015 — nabolagsverdier den nesten kan lese av. Testscoren måler hukommelse, ikke generalisering."},
+      group:{share:"17 %",leak:"0 av 6",r2:"0.71  ærlig",
+        note:"Hele serier holdes samlet. Testsettet inneholder land–vekst-kombinasjoner modellen aldri har sett. Dette svarer på spørsmålet «virker modellen på nye land og vekster?» — og scoren faller, som den skal."},
+      time:{share:"18 %",leak:"0 år overlapp",r2:"0.78  ærlig",
+        note:"Test = de to siste årene. Svarer på «kan modellen predikere fremtiden?», som ofte er det man faktisk vil vite. Merk at serien fortsatt deles — modellen kjenner landet, bare ikke året."}
+    }[mode];
+    document.getElementById("sp-share").textContent=info.share;
+    document.getElementById("sp-leak").textContent=info.leak;
+    document.getElementById("sp-r2").textContent=info.r2;
+    document.getElementById("sp-r2").parentElement.className="stat "+(mode==="rand"?"warn":"good");
+    document.getElementById("sp-note").innerHTML=info.note;
+  }
+  seg([...document.querySelectorAll(".sppick")],b=>{mode=b.dataset.s;render()});
+  render();
+})();
+
+/* ============================================================
+   Fig 8 — PCA variance
+   ============================================================ */
+(function(){
+  const host=document.getElementById("pca-bars");
+  let logMode=false;
+  const sets={
+    raw:{v:[0.612,0.334,0.054],note:"På rå skala er sammenhengen mellom de tre kolonnene ikke lineær (avling er et <em>forhold</em>), så PCA klarer ikke å presse dem ned i to dimensjoner. PC3 beholder ca. 5 % av variansen, og du trenger alle tre komponentene for å nå 95 %."},
+    log:{v:[0.667,0.333,0.0003],note:"På log-skala gjelder log(avling) = log(produksjon) − log(areal) + 4 eksakt. Den tredje komponenten har derfor <strong>tilnærmet null varians</strong> — to komponenter forklarer i praksis 100 %. Dette er det sterkeste enkeltfunnet du kan rapportere i oppgave 6: dataene har tre kolonner, men bare to frihetsgrader."}
+  };
+  function render(){
+    const s=logMode?sets.log:sets.raw;
+    let cum=0;
+    host.innerHTML=s.v.map((x,i)=>{
+      cum+=x;
+      return `<div class="track" style="padding-bottom:6px">
+        <div class="tlab"><span>PC${i+1}</span><em>${(x*100).toFixed(2)} % · kumulativt ${(cum*100).toFixed(2)} %</em></div>
+        <div style="height:16px;background:var(--surface-2);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${(x*100).toFixed(2)}%;background:${i===2&&logMode?"var(--rust)":"var(--moss)"};transition:width .4s ease"></div>
+        </div>
+      </div>`;
+    }).join("");
+    document.getElementById("pca-note").innerHTML=s.note;
+  }
+  const r=document.getElementById("pc-raw"), l=document.getElementById("pc-log");
+  seg([r,l],b=>{logMode=(b===l);render()});
+  render();
+})();
+
+/* ============================================================
+   Checklist
+   ============================================================ */
+(function(){
+  const items=[
+    ["Sagt hvilken versjon av datasettet tallene gjelder (rader, kolonner, årsintervall)","oppg. 1"],
+    ["Begrunnet at Year behandles som numerisk","oppg. 1"],
+    ["Tabell med manglende verdier per kolonne, i antall og prosent","oppg. 1–2"],
+    ["Begrunnet valg av imputeringsmetode med et tall fra egne data","oppg. 2"],
+    ["Brukt både IQR og z-score, og rapportert andel flagget","oppg. 3"],
+    ["Begrunnet fjern / capp / transformer, med domenekunnskap","oppg. 3"],
+    ["Begrunnet one-hot vs. label med «har kategoriene rekkefølge?»","oppg. 4a"],
+    ["Forklart hvorfor skalering trengs, med de faktiske tallområdene","oppg. 4b"],
+    ["Sagt hva som skal predikeres, og utelukket lekkende features","oppg. 4–5"],
+    ["Splittet før fit av scaler og imputer (eller sagt at pipeline gjør det)","oppg. 5"],
+    ["Forklart overtilpasning og hvordan splitten avdekker den","oppg. 5"],
+    ["Standardisert før PCA og diskutert tolkbarhet","oppg. 6"],
+    ["Alle figurer har aksetekst med enhet, og alle tabeller har tekst","alle"],
+    ["Under 3 000 ord, tabell- og figurtekster medregnet","alle"]
+  ];
+  document.getElementById("checklist").innerHTML=items.map((it,i)=>
+    `<li><input type="checkbox" id="chk${i}"><label for="chk${i}">${it[0]}</label><span class="pts">${it[1]}</span></li>`).join("");
+})();
+
+/* ============================================================
+   Quizzes
+   ============================================================ */
+const QUIZ={
+q0:{title:"Kapittel 0",items:[
+ {t:"mc",q:"Du skriver i oppgave 3: «Vi fjernet alle verdier som IQR-regelen flagget.» Ingenting mer. Hva skjer med poengene?",
+  o:["Ingenting — metoden er riktig anvendt","Opptil 10 poeng trekkes, fordi begrunnelsen mangler","Du får delvis uttelling siden IQR er nevnt","Det avhenger av om koden er vedlagt"],a:1,
+  fb:"Oppgaveteksten er eksplisitt: mangler begrunnelsen der den er etterspurt, trekkes 10 poeng fra den deloppgaven. På en 20-poengs oppgave er det halvparten. Riktig metode er bare halve jobben."},
+ {t:"mc",q:"Hvilken av disse setningene er en <em>begrunnelse</em> i oppgavens forstand?",
+  o:["«Vi brukte medianen fordi den er robust mot outliers.»","«Vi brukte medianen, som er vanlig praksis i preprosessering.»","«Vi brukte medianen fordi produksjonen er så høyreskjev at gjennomsnittet er 54 ganger medianen.»","«Vi brukte medianen etter å ha testet flere alternativer.»"],a:2,
+  fb:"Bare alternativ C knytter valget til en målt egenskap ved <em>disse</em> dataene. De tre andre kunne stått i en hvilken som helst besvarelse om et hvilket som helst datasett — og det er nettopp det sensor ser."}
+]},
+q1:{title:"Kapittel 1",items:[
+ {t:"mc",q:"Datasettet ditt har kolonnene Area, Item, Year, Element, Unit, Value. Hva er én rad?",
+  o:["Ett land i ett år","Én måling — én type tall for ett land, én vekst og ett år","Én vekst i ett land","En observasjon klar for modellering"],a:1,
+  fb:"Dette er langt format. Kolonnen <code>Element</code> forteller hva tallet i <code>Value</code> er, så én rad er én enkelt måling. Tre rader utgjør til sammen én observasjon."},
+ {t:"mc",q:"Hvorfor må «World», «Africa» og «European Union (27)» fjernes før du beskriver datasettet?",
+  o:["De har for mange manglende verdier","De er summer av andre rader, så de dobbelttelles og blir kunstige outliers","FAOSTAT anbefaler det","De mangler landkode"],a:1,
+  fb:"De er aggregater. Blir de liggende, teller du de samme avlingene to ganger, og «World» dukker opp som største verdi i hver eneste vekst — en outlier som ikke er en outlier, men en feil i datasettvalget ditt."},
+ {t:"long",q:"Skriv 2–3 setninger som du kunne limt rett inn i rapporten, der du sier hva én rad er i ditt datasett, og hvilke avgrensninger du har gjort.",
+  hint:"Ta med: hva enheten er, hvor mange rader, hvilke år, og hva du fjernet.",
+  model:"«Each row is one country–crop–year observation with three measurements: area harvested (ha), production (tonnes) and yield (hg/ha). The raw FAOSTAT file is in long format and was pivoted to wide format, giving one row per observation. We removed 35 regional aggregates (e.g. World, Africa, European Union (27)), since they are sums of member countries and would double-count production, and kept the years 2010–2020. The resulting dataset has 98,101 rows, 200 countries and 118 crops.»",
+  crit:["Sier eksplisitt hva én rad er","Nevner pivot fra langt til bredt","Begrunner fjerning av aggregater (dobbelttelling)","Oppgir konkrete tall for resultatet"]}
+]},
+q2:{title:"Kapittel 2",items:[
+ {t:"mc",q:"En kolonne har median 19 067 og gjennomsnitt 1 025 476. Hva kan du slutte?",
+  o:["Det er minst én feilregistrering","Fordelingen er sterkt høyreskjev","Kolonnen har mange manglende verdier","Dataene må standardiseres"],a:1,
+  fb:"Når gjennomsnittet ligger langt over medianen, er halen lang mot høyre. Det <em>kan</em> skyldes feil, men i produksjonsdata er det normalt: noen få land produserer enormt mye. Observasjonen driver valg av både imputering (median) og skalering (log/robust)."},
+ {t:"mc",q:"<code>Year</code> er lagret som int64. Bør den behandles som numerisk eller kategorisk?",
+  o:["Kategorisk — år er navn på tidsperioder","Numerisk — årene er ordnet med like avstander, så avstandene betyr noe","Kategorisk, fordi det bare er 11 unike verdier","Det spiller ingen rolle for modellen"],a:1,
+  fb:"Testen er ikke datatypen, men om avstandene betyr noe: 2010→2011 er samme steg som 2019→2020, så numerisk er riktig, og du slipper 11 one-hot-kolonner. Et postnummer er også int64, men der betyr avstanden ingenting — det skal være kategorisk."},
+ {t:"mc",q:"I figur 2 ble fordelingen nesten symmetrisk på log-skala. Hva forteller det deg?",
+  o:["At dataene inneholder feil som må fjernes","At verdiene er tilnærmet lognormale, altså at multiplikative forhold er den naturlige skalaen","At du må bruke Min–Max-skalering","At medianen er lik gjennomsnittet"],a:1,
+  fb:"Symmetri etter logaritmering er selve definisjonen av en lognormal fordeling. Praktisk betyr det at «dobbelt så stor» er et mer meningsfullt steg enn «1 000 tonn mer» — og det er argumentet for log-transformasjon i både oppgave 3 og 4."},
+ {t:"long",q:"Du har kjørt <code>describe()</code> og fått tallene i tabellen over. Skriv den delen av oppgave 1 som handler om de numeriske kolonnene — maks 80 ord.",
+  hint:"Ikke gjenta tabellen i prosa. Si hva tallene betyr.",
+  model:"«All three measurements are strongly right-skewed: mean production is 54 times the median, and the standard deviation exceeds the mean in every column. The maxima are extreme relative to the bulk of the data — the largest production value is 5,360 times Q3 — but correspond to real large-scale producers rather than recording errors. This shape motivates median-based imputation (Task 2) and a log transformation before scaling (Task 4).»",
+  crit:["Nevner skjevhet med et konkret forholdstall","Nevner at std > mean","Kommenterer maksimum i forhold til Q3","Peker framover mot konsekvensen for senere valg"]}
+]},
+q3:{title:"Kapittel 3",items:[
+ {t:"mc",q:"Avlingen mangler systematisk i akkurat de årene der avlingen slo feil og ble null. Hvilken mekanisme er det?",
+  o:["MCAR","MAR","MNAR","Ingen av delene — det er en outlier"],a:2,
+  fb:"Sannsynligheten for at verdien mangler avhenger av <em>verdien selv</em>: den mangler fordi den var null. Det er MNAR, og da er ingen imputering nøytral — enhver innsatt verdi vil være for høy. Det må diskuteres, ikke skjules."},
+ {t:"mc",q:"Du har 7 % manglende i en sterkt høyreskjev kolonne. Hvorfor er medianen bedre enn gjennomsnittet?",
+  o:["Medianen er alltid mer nøyaktig","Gjennomsnittet dras opp av halen og er ikke representativt for en typisk rad","Medianen bevarer variansen bedre","Gjennomsnittet kan ikke brukes på flyttall"],a:1,
+  fb:"Gjennomsnittet er 54 ganger medianen i denne kolonnen. Imputerer du med gjennomsnittet, gir du 7 % av radene en verdi som er høyere enn ca. 90 % av de observerte. Medianen er mye nærmere en typisk rad. Merk at <em>begge</em> krymper variansen."},
+ {t:"mc",q:"I crop1 mangler produksjonen, mens areal og avling finnes i samme rad. Hva er det beste trekket?",
+  o:["Imputere med medianen for den vekstens produksjon","Slette raden","Regne ut produksjon = avling × areal / 10 000, siden identiteten gjelder eksakt","Interpolere fra nabo-årene"],a:2,
+  fb:"Når kolonnene henger deterministisk sammen, er utregning eksakt — ikke et estimat. Det slår enhver imputering. Men flagg radene (<code>imputed = True</code>), for verdien er utledet og ikke observert, og det har betydning ved splitting."},
+ {t:"long",q:"Skriv begrunnelsesavsnittet til oppgave 2: hvilken regel du bruker, i hvilken rekkefølge, og hvorfor.",
+  hint:"En nummerert regel er mer overbevisende enn ett generelt valg.",
+  model:"«We handle missing values in three steps. (1) Where exactly one of the three measurements is missing and the other two are present, we compute it from the identity yield = production × 10,000 / area; this is exact rather than estimated, and we flag the affected rows. (2) Rows where all three measurements are missing (5,622 rows) carry no information about the target and are dropped. (3) Remaining gaps are filled with the median within the same crop, not the global median, because the distribution is strongly right-skewed (mean = 54 × median) and yield levels differ by an order of magnitude between crops. We note that median imputation shrinks the variance of the affected columns, and that the fill values must be computed on the training set only to avoid leakage (Task 5).»",
+  crit:["Har en eksplisitt rekkefølge av regler","Utnytter identiteten mellom kolonnene","Begrunner median med et tall fra dataene","Begrunner gruppering (per vekst)","Nevner kostnaden (variansreduksjon) eller lekkasje"]}
+]},
+q4:{title:"Kapittel 4",items:[
+ {t:"mc",q:"IQR-regelen med k = 1.5 flagger 13 % av produksjonsverdiene. Hva er den mest sannsynlige tolkningen?",
+  o:["13 % av dataene er feilregistrert og må fjernes","Fordelingen er tunghalet, så regelens forutsetning passer dårlig — de fleste flaggede verdiene er ekte","k må settes til 3.0 for å være gyldig","Datasettet er for lite"],a:1,
+  fb:"k = 1.5 er kalibrert mot en tilnærmet normalfordeling, der den flagger ca. 0,7 %. Får du 13 %, er det fordelingen som ikke er normal — ikke dataene som er feil. Det samme datasettet flagger bare 1,3 % når IQR kjøres på log-skala."},
+ {t:"mc",q:"Hva er problemet med z-score på en sterkt skjev fordeling?",
+  o:["Z-score kan bare brukes på heltall","Outlierne blåser opp standardavviket og skjuler dermed seg selv (masking), og bare den ene halen kan flagges","Z-score krever at dataene er skalert først","Z-score flagger for mange verdier"],a:1,
+  fb:"Både x̄ og s regnes ut med outlierne inkludert — én ekstrem verdi kan alene gjøre s så stor at den selv havner innenfor 3s. Og siden verdiene ikke kan bli negative, finnes det ingen verdier 3 standardavvik under et snitt nær null."},
+ {t:"mc",q:"Hvorfor bør outlier-deteksjonen gjøres per <code>Item</code> og ikke på hele datasettet samlet?",
+  o:["Det går raskere","Ellers måler du forskjellen mellom vekster i stedet for uvanlige verdier innenfor en vekst","sklearn krever gruppering","For å unngå manglende verdier"],a:1,
+  fb:"Sukkerrør gir titusener av tonn per hektar, vanilje noen hundre kilo. Kjører du IQR samlet, blir hele sukkerrørkategorien flagget — ikke fordi verdiene er uvanlige, men fordi de er sukkerrør. Gruppering er den enkleste store forbedringen i oppgave 3."},
+ {t:"long",q:"Nederlandske veksthusagurker har en avling på 743 tonn per hektar — over 100 ganger medianen for agurk. Argumenter for hva du gjør med den, og hvorfor.",
+  hint:"Det finnes flere forsvarlige svar. Det er argumentet som teller.",
+  model:"«The value is real, not a recording error: Dutch cucumbers are grown in heated glasshouses with several harvests per year, a fundamentally different production system from open-field cultivation. We therefore do not delete it — removing real observations would bias the dataset towards field production and understate the true range of the variable. Nor do we cap it, since capping would replace an observed value with a fabricated one. Instead we apply a log transformation to yield, which keeps every observation while reducing the leverage of the upper tail from a factor of 100 to a factor of two on the transformed scale. We report the number of values flagged by the IQR rule before and after the transformation (4.5 % → 2.9 %) so the effect is visible.»",
+  crit:["Vurderer om verdien er ekte eller feil, med domeneargument","Velger én handling og avviser minst én annen eksplisitt","Nevner konsekvensen av valget","Underbygger med et tall"]}
+]},
+q5:{title:"Kapittel 5",items:[
+ {t:"mc",q:"Hvilken variabel er den eneste av disse som forsvarer label/ordinal encoding?",
+  o:["Land (200 verdier)","Vekst (118 verdier)","Størrelsesklasse: liten &lt; medium &lt; stor","Postnummer"],a:2,
+  fb:"Bare størrelsesklassen har en ekte rekkefølge der tallene 0, 1, 2 bærer riktig informasjon. Land, vekst og postnummer har ingen naturlig rangering, og label encoding ville påstå en som ikke finnes."},
+ {t:"mc",q:"Du one-hot-encoder Area (200) og Item (117). Hva bør du nevne i rapporten?",
+  o:["At datasettet nå er for stort til å modellere","At dimensjonaliteten øker til 317 kolonner, og hva det betyr for modellvalg","At kategoriene nå er ordnet","At skalering ikke lenger er nødvendig"],a:1,
+  fb:"317 kolonner er håndterbart med 88 735 rader, men det er en reell konsekvens: matrisen blir tynt besatt, lineære modeller trenger regularisering, og tre-baserte modeller får mange lavinformative splitter. Å nevne dette viser at du forstår hva encodingen koster."},
+ {t:"mc",q:"Hva er dummy-fellen (dummy variable trap)?",
+  o:["At one-hot-kolonner blir for mange","At alle dummy-kolonnene summerer til 1, så én er utledbar fra resten — perfekt kollinearitet i en lineær modell med konstantledd","At ukjente kategorier i testsettet gir feil","At label encoding lager falsk rekkefølge"],a:1,
+  fb:"Derfor <code>drop_first=True</code> for lineære modeller. Tre-baserte modeller er upåvirket, så det er et modellavhengig valg — nettopp den typen nyanse som gir uttelling."}
+]},
+q6:{title:"Kapittel 6",items:[
+ {t:"mc",q:"Hvilken av disse modellene trenger <em>ikke</em> skalering?",
+  o:["k-nærmeste-nabo","Random forest","SVM med RBF-kjerne","Ridge-regresjon"],a:1,
+  fb:"Tre-baserte modeller splitter på rangering («er x &gt; 5 000?»), og rangeringen endres ikke av en monoton skalering. De tre andre bruker enten avstander eller et straffeledd, og begge deler avhenger direkte av skalaen."},
+ {t:"mc",q:"Datasettet har én ekstrem outlier. Hvilken skalering blir hardest rammet?",
+  o:["Min–Max, fordi max settes av outlieren og alle andre klemmes sammen nær 0","Standardisering, fordi den bruker gjennomsnittet","Robust skalering, fordi IQR er liten","Alle tre rammes likt"],a:0,
+  fb:"Min–Max bruker kun de to ekstremverdiene, så én outlier bestemmer hele nevneren. Standardisering påvirkes også (via snitt og std), men mindre. Robust skalering bruker median og IQR og er nesten uberørt — som figur 6 viser."},
+ {t:"mc",q:"Hva er riktig rekkefølge?",
+  o:["fit_transform på hele datasettet, så splitte","Splitte, fit på trening, transform på både trening og test","Splitte, fit_transform på hver del for seg","Skalere før imputering av manglende verdier"],a:1,
+  fb:"Alternativ A og C lar testsettets statistikk påvirke transformasjonen — datalekkasje. Bruk <code>Pipeline</code>, så er rekkefølgen umulig å rote til, og du kan si det i én setning i rapporten."},
+ {t:"long",q:"Skriv begrunnelsen for skalering i oppgave 4b: hvorfor det trengs her, hvilken metode du valgte, og hva alternativet ville gitt.",
+  hint:"Bruk de faktiske tallområdene fra datasettet ditt.",
+  model:"«The numerical features span vastly different ranges: production reaches 7.7 × 10⁸ tonnes while Year lies between 2,010 and 2,020. In any distance-based model (k-NN, k-means, SVM) the Euclidean distance would be determined almost entirely by production, and Year would carry no weight at all; in gradient-based models the uneven curvature slows convergence. We first apply log10 to the three measurements, because they are approximately lognormal (Figure 2) and the raw scale is dominated by a heavy right tail, and then standardise (z-score) so every feature has mean 0 and standard deviation 1. Min–Max scaling was rejected because a single extreme value sets the denominator and compresses the remaining observations into a narrow band near zero. All scalers are fitted on the training set only and applied to the test set, so no test-set statistics leak into training.»",
+  crit:["Oppgir konkrete tallområder","Sier hvilke modeller som faktisk rammes og hvordan","Velger metode og begrunner log-steget","Avviser et alternativ eksplisitt","Nevner fit på trening / transform på begge"]}
+]},
+q7:{title:"Kapittel 7",items:[
+ {t:"mc",q:"Hva er kjernen i overtilpasning?",
+  o:["Modellen har for mange kolonner","Modellen lærer støy i treningsdataene i stedet for det generelle mønsteret, og gjør det dårligere på nye data","Modellen er trent for lenge","Treningssettet er for lite"],a:1,
+  fb:"Symptomet er et stort gap mellom treningsscore og testscore. For mange features og for lang trening er <em>årsaker</em> som kan føre dit, men definisjonen er at modellen har lært det spesifikke i stedet for det generelle."},
+ {t:"mc",q:"Du predikerer avling og har med både produksjon og areal som features. Hva er galt?",
+  o:["Ingenting — flere features er bedre","Avling = produksjon × 10 000 / areal, så målvariabelen kan regnes eksakt ut fra featurene: mållekkasje","De to featurene er korrelerte, som gir multikollinearitet","Enhetene er forskjellige"],a:1,
+  fb:"Modellen får fasiten inn som feature. R² blir nær 1,00 og betyr ingenting. I dette datasettet må du velge: predikér avling <em>uten</em> produksjon, eller predikér produksjon <em>uten</em> avling."},
+ {t:"mc",q:"crop1 består av 8 316 tidsserier med typisk 11 år hver, og avlingen varierer lite innen én serie. Hva er problemet med en tilfeldig 80/20-split?",
+  o:["Testsettet blir for lite","Nesten identiske rader fra samme serie havner i både trening og test, så testscoren blir for optimistisk","Splitten blir ikke reproduserbar","Kategoriene blir ubalanserte"],a:1,
+  fb:"Kenyas mais i 2014 og 2015 er nesten samme observasjon. Har modellen sett den ene, kan den nesten lese av den andre. Bruk <code>GroupShuffleSplit</code> på land × vekst, eller splitt på tid — og si hvilket spørsmål du ville svare på."},
+ {t:"long",q:"Skriv oppgave 5s forklaring av hvorfor splitting hindrer overtilpasning, tilpasset dette datasettet — maks 120 ord.",
+  hint:"Generell teori + den konkrete panelstrukturen.",
+  model:"«A model evaluated on the data it was trained on can memorise rather than generalise, so training error is not evidence of performance. Holding out a test set that the model never sees — directly or indirectly — gives an unbiased estimate and reveals overfitting as a gap between training and test scores. In this dataset a purely random 80/20 split is not sufficient: the data are panel data, 8,316 country–crop series of about 11 years each, and yield varies little within a series (CV = 0.10). A random split therefore places near-duplicate rows on both sides and inflates the test score. We use GroupShuffleSplit on country × crop so that whole series stay on one side, which answers the question the model is actually meant to answer: does it generalise to unseen countries and crops?»",
+  crit:["Definerer overtilpasning og rollen til testsettet","Nevner gapet trening/test som symptom","Identifiserer panelstrukturen som problem","Velger en split og knytter den til et konkret spørsmål"]}
+]},
+q8:{title:"Kapittel 8",items:[
+ {t:"mc",q:"Hvorfor må du standardisere før PCA?",
+  o:["Fordi PCA krever positive verdier","Fordi PCA maksimerer varians, og varians avhenger av måleenhet — ellers bestemmer enhetsvalget komponentene","Fordi PCA ikke tåler manglende verdier","Fordi komponentene ellers blir korrelerte"],a:1,
+  fb:"Bytter du fra tonn til kilo, blir variansen en million ganger større, og den kolonnen tar over PC1 — uten at noe ved dataene er endret. Standardisering gir alle kolonner samme utgangspunkt (PCA på korrelasjonsmatrisen)."},
+ {t:"mc",q:"PC3 forklarer tilnærmet 0 % av variansen i log-transformerte crop1-data. Hva betyr det?",
+  o:["At PCA feilet","At de tre kolonnene egentlig bare inneholder to uavhengige størrelser, siden log(avling) = log(produksjon) − log(areal) + 4","At den tredje kolonnen er full av manglende verdier","At dataene bør normaliseres på nytt"],a:1,
+  fb:"En eksakt lineær sammenheng mellom kolonnene betyr at dataene ligger i et plan i 3D-rommet. Retningen ut av planet har null varians, og PCA finner nøyaktig det. Det er en perfekt konkret illustrasjon av hva dimensjonsreduksjon gjør."},
+ {t:"mc",q:"Hva er den viktigste kostnaden ved PCA?",
+  o:["Den er treg på store datasett","Komponentene er lineærkombinasjoner av alle originalvariablene, så tolkbarheten forsvinner","Den krever at data er normalfordelt","Den fjerner outliers"],a:1,
+  fb:"«PC1 = 0,58 × log(areal) + 0,57 × log(produksjon) + 0,01 × log(avling)» sier langt mindre til en leser enn «høstet areal». Dessuten er PCA usupervisert — retningen med mest varians er ikke nødvendigvis den mest prediktive."}
+]},
+q9:{title:"Kapittel 9",items:[
+ {t:"mc",q:"Du har 400 ord igjen av ordgrensen og både oppgave 3 og oppgave 5 kunne trengt mer. Hvor legger du dem?",
+  o:["Oppgave 5, siden splitting kommer sist","Oppgave 3, som er verdt 20 poeng mot oppgave 5s 10","Fordelt likt","På en ekstra figur"],a:1,
+  fb:"Ordene bør følge poengene. Oppgave 3 og 4 utgjør til sammen 50 av 100 poeng og krever begge eksplisitt begrunnelse — det er der marginalordet er mest verdt."},
+ {t:"mc",q:"Når hører kode hjemme i rapporten?",
+  o:["Alltid, som vedlegg til hver deloppgave","Når forklaringen ikke kan gis uten den — for eksempel en regel som er lettere å lese som tre linjer kode enn som prosa","Aldri","Bare for figurene"],a:1,
+  fb:"Oppgaveteksten sier «only when it is absolutely necessary». En <code>ColumnTransformer</code> som viser nøyaktig hvilken behandling hver kolonne får, er ofte kortere og klarere enn samme informasjon i prosa. <code>df.head()</code> er det ikke."}
+]},
+exam:{title:"Sluttprøve",items:[
+ {t:"mc",q:"Riktig rekkefølge på rørledningen, med lekkasje i tankene:",
+  o:["utforsk → rens → outliers → splitt → transformer","utforsk → transformer → rens → splitt → outliers","splitt → utforsk → rens → transformer → outliers","utforsk → rens → transformer → outliers → splitt"],a:0,
+  fb:"Utforskning og rensing kan gjøres på alt (så lenge du ikke bruker testsettets statistikk til å bestemme fyllverdier), men alt som <em>tilpasses</em> dataene — imputeringsverdier, skaleringsparametre, PCA — må fittes etter splitten, på treningsdelen."},
+ {t:"mc",q:"<code>df.describe()</code> viser <code>count</code> = 90 929 for én kolonne og 98 101 rader totalt. Hva betyr det?",
+  o:["7 172 duplikater","7 172 manglende verdier i den kolonnen","7 172 outliers","Kolonnen har 90 929 unike verdier"],a:1,
+  fb:"<code>count</code> teller ikke-manglende verdier. Differansen mot antall rader er antall <code>NaN</code> — 7,3 % i dette tilfellet."},
+ {t:"mc",q:"Hvilken påstand om IQR-regelen er riktig?",
+  o:["Den forutsetter normalfordeling","Den bygger på kvartiler og er derfor robust mot ekstremverdier, men k = 1.5 er kalibrert mot normalfordelingen","Den flagger alltid 5 % av dataene","Den kan bare brukes etter skalering"],a:1,
+  fb:"Robust i konstruksjonen, men kalibrert mot normalfordelingen i valget av k. Derfor flagger den langt mer enn 0,7 % på tunghalede data — uten at det betyr at dataene er feil."},
+ {t:"mc",q:"Du imputerer 10 % av en kolonne med medianen. Hva skjer med standardavviket?",
+  o:["Det øker","Det faller, fordi 10 % av verdiene nå er identiske","Det er uendret","Det avhenger av antall rader"],a:1,
+  fb:"Alle imputerte verdier ligger i midten, så spredningen krymper. Fordelingen får en kunstig topp ved medianen. Det er den viktigste kostnaden ved enkel imputering, og verdt en setning i oppgave 2."},
+ {t:"mc",q:"Hvilken encoding passer for «utdanningsnivå: grunnskole, videregående, universitet»?",
+  o:["One-hot, fordi det er tekst","Ordinal encoding, fordi kategoriene har en ekte rangering","Label encoding tilfeldig alfabetisk","Ingen — dropp kolonnen"],a:1,
+  fb:"Ordinal encoding med <em>riktig</em> rekkefølge (0, 1, 2) bevarer informasjonen om rangering, som one-hot ville kastet bort. Nøkkelen er at du bestemmer rekkefølgen — ikke alfabetet."},
+ {t:"mc",q:"Etter Min–Max-skalering ligger alle treningsverdier i [0, 1]. En testverdi blir 1,34. Er noe galt?",
+  o:["Ja, transformasjonen er feil implementert","Nei — testsettet inneholder en verdi større enn treningssettets maksimum, som er normalt og forventet","Ja, testsettet må skaleres for seg","Nei, men verdien må klippes til 1"],a:1,
+  fb:"Dette er faktisk beviset på at du gjorde det riktig: scaleren ble fittet på trening alene. Hadde du fittet på alt, ville ingen testverdi kunne overstige 1 — og da hadde du hatt lekkasje."},
+ {t:"mc",q:"Hva er forskjellen på et valideringssett og et testsett?",
+  o:["Ingen, det er to navn på samme ting","Valideringssettet brukes til å velge modell og hyperparametre; testsettet røres bare én gang, helt til slutt","Testsettet er alltid større","Valideringssettet brukes bare ved klassifikasjon"],a:1,
+  fb:"Bruker du testsettet gjentatte ganger til å velge mellom modeller, blir det gradvis et valideringssett, og estimatet blir optimistisk. Derfor: kryssvalidering på treningsdelen, testsettet til slutt."},
+ {t:"mc",q:"Hvilken er <em>ikke</em> datalekkasje?",
+  o:["Skalere hele datasettet før splitting","Imputere med medianen for hele datasettet","Fjerne rader med umulige verdier (negativt areal) før splitting","Bruke produksjon og areal som features når du predikerer avling"],a:2,
+  fb:"Å fjerne fysisk umulige rader er en datakvalitetsregel som ikke bruker noen statistikk fra dataene — den ville vært den samme uansett hvilke rader du hadde. De tre andre lar informasjon fra testsettet, eller fra målvariabelen, påvirke treningen."},
+ {t:"mc",q:"En kolonne har 68 % manglende verdier. Hva er mest forsvarlig?",
+  o:["Imputere med medianen som vanlig","Vurdere å droppe kolonnen, eller beholde den som et binært «finnes/finnes ikke»-flagg, og begrunne valget","Slette alle rader med hull i den","Erstatte med 0"],a:1,
+  fb:"Imputerer du 68 %, er kolonnen i praksis konstant, og du har konstruert nesten hele innholdet selv. Alternativ B er ærlig: enten ut, eller behold selve <em>mangelen</em> som informasjon — som kan være prediktiv hvis den er MNAR."},
+ {t:"mc",q:"Hvorfor er <code>random_state</code> verdt å nevne i rapporten?",
+  o:["Det gjør modellen mer nøyaktig","Det gjør splitten reproduserbar, slik at leseren får samme tall som deg","Det er påkrevd av sklearn","Det hindrer overtilpasning"],a:1,
+  fb:"Reproduserbarhet er et av vurderingskriteriene («quality of documentation»). Uten fast frø får sensor andre tall enn dine, og ingen kan etterprøve noe."},
+ {t:"mc",q:"Du kjører PCA uten å standardisere først, på areal (ha) og produksjon (tonn). Hva skjer?",
+  o:["Komponentene blir identiske med de standardiserte","Kolonnen med størst tallverdi dominerer PC1, uavhengig av om den er viktigst","PCA feiler med en feilmelding","Forklart varians summerer ikke til 1"],a:1,
+  fb:"PCA maksimerer varians, og varians måles i kvadrerte enheter. Produksjonstall i tonn har enormt mye større varians enn arealtall i hektar, så PC1 blir nesten bare produksjon — en artefakt av enhetsvalget."},
+ {t:"mc",q:"Sensor leser oppgave 4 og finner riktig one-hot-kode, riktig StandardScaler, og setningen «Vi valgte disse metodene fordi de er standard i preprosessering». Hva blir resultatet?",
+  o:["Full uttelling, siden koden er riktig","Trekk, fordi begrunnelsen ikke knytter valget til dataenes egenskaper","Ingen trekk, begrunnelse er nevnt","Avhenger av figurene"],a:1,
+  fb:"«Standard praksis» er ikke en begrunnelse — den kunne stått i en hvilken som helst besvarelse. Sensor ser etter koblingen til <em>dine</em> data: kardinalitet, manglende rekkefølge, faktiske tallområder."},
+ {t:"long",q:"Langsvar 1 — Du skal levere oppgave 3 på 200 ord. Skriv utkastet: deteksjon, resultat, handling, begrunnelse.",
+  hint:"Begge metodene, andeler, gruppering, og ett konkret eksempel.",
+  model:"«We detected outliers with two methods, applied per crop so that the comparison is within rather than between crops. The IQR rule (k = 1.5) flags 13–14 % of area and production values and 4.5 % of yields; the z-score rule (|z| > 3) flags about 2 %. The large discrepancy reflects the shape of the data rather than data quality: all three measurements are strongly right-skewed, and the IQR threshold is calibrated for approximately normal distributions. Applying the same IQR rule to log10-transformed values reduces the flagged share to 1.3–1.4 %. Inspection confirms that the extreme values are genuine — 45 million ha of rice in India, 769 million tonnes of sugar cane in Brazil, 743 t/ha for Dutch glasshouse cucumbers. We therefore neither delete nor cap them, since both would replace or discard real observations and bias the dataset towards field-scale production. Instead we log-transform the three measurements, which retains every row while reducing the leverage of the upper tail. The 31 rows with zero production (crop failures) are handled with log1p rather than being dropped. Values that remain flagged after transformation are retained and reported.»",
+  crit:["Begge metodene, med tall","Gruppering per vekst nevnt","Forklarer hvorfor andelene er så ulike","Velger handling og avviser alternativer","Håndterer nullene eksplisitt"]},
+ {t:"long",q:"Langsvar 2 — Forklar for en medstudent, uten å bruke ordet «lekkasje», hvorfor <code>StandardScaler().fit_transform(X)</code> før splitting er feil.",
+  hint:"Tenk på hva scaleren faktisk har lært, og hva testsettet er ment å simulere.",
+  model:"«Scaleren lærer to tall fra dataene: gjennomsnittet og standardavviket. Kaller du fit_transform på hele X, er begge regnet ut med testradene inkludert, og de transformerte treningsverdiene inneholder derfor informasjon om rader modellen ikke skal ha sett. Testsettet er ment å simulere fremtidige data som ennå ikke finnes — og en gjennomsnittsverdi kan umulig være regnet ut fra data som ikke finnes ennå. Konsekvensen er at testscoren blir litt for god, og at du ikke kan gjenskape prosedyren i produksjon: der kommer radene én og én, og du må bruke de lagrede tallene fra treningen. Riktig fremgangsmåte er å splitte først, kalle fit på treningsdelen og deretter transform på begge delene med de samme lagrede tallene.»",
+  crit:["Sier hva scaleren faktisk lærer (to parametre)","Forklarer hva testsettet skal simulere","Nevner konsekvensen for scoren","Beskriver riktig fremgangsmåte","Nevner produksjonsargumentet eller tilsvarende"]},
+ {t:"long",q:"Langsvar 3 — Du har ett avsnitt på 100 ord i innledningen til å forklare målvariabelen og hvorfor den bestemmer alt etterpå. Skriv det.",
+  hint:"Identiteten mellom kolonnene er kjernen.",
+  model:"«We predict yield (hg/ha) from country, crop, year and harvested area. The choice matters for every later step, because yield is defined as production × 10,000 / area: including production among the features would let the model reconstruct the target exactly, and any reported score would be meaningless. We therefore exclude production from the feature set. The same identity also affects Task 2 — where two of the three measurements are present, the third is computed rather than imputed, and those rows are flagged — and Task 6, where it makes the third principal component of the log-transformed measurements almost perfectly degenerate.»",
+  crit:["Sier eksplisitt hva som predikeres og fra hva","Identifiserer identiteten som lekkasjekilde","Utelukker den lekkende featuren","Kobler valget til minst én annen deloppgave"]}
+]}
+};
+
+(function(){
+  let state={};
+  try{state=JSON.parse(localStorage.getItem("prepro-v1")||"{}")}catch(e){state={}}
+  const save=()=>{try{localStorage.setItem("prepro-v1",JSON.stringify(state))}catch(e){}};
+
+  let totalItems=0;
+  const LETTERS=["A","B","C","D","E"];
+
+  document.querySelectorAll("[data-quiz]").forEach(host=>{
+    const key=host.dataset.quiz, q=QUIZ[key];
+    if(!q) return;
+    totalItems+=q.items.length;
+    const head=document.createElement("div");
+    head.className="quiz-head";
+    head.innerHTML=`<span>${key==="exam"?"Sluttprøve":"Test deg selv · "+q.title}</span><span class="score" data-score="${key}"></span>`;
+    host.appendChild(head);
+
+    q.items.forEach((item,idx)=>{
+      const id=key+"-"+idx;
+      const box=document.createElement("div");
+      box.className="q";
+      if(item.t==="mc"){
+        box.innerHTML=`<p class="stem"><span class="qn">${idx+1}.</span>${item.q}</p><div class="opts"></div>`;
+        const opts=box.querySelector(".opts");
+        item.o.forEach((text,oi)=>{
+          const b=document.createElement("button");
+          b.type="button"; b.className="opt";
+          b.innerHTML=`<span class="mk">${LETTERS[oi]}</span><span>${text}</span>`;
+          b.addEventListener("click",()=>{
+            if(box.dataset.done) return;
+            box.dataset.done="1";
+            state[id]=(oi===item.a);
+            save();
+            [...opts.children].forEach((c,ci)=>{
+              c.disabled=true;
+              if(ci===item.a) c.dataset.state="right";
+              else if(ci===oi) c.dataset.state="wrong";
+            });
+            const fb=document.createElement("div");
+            fb.className="fb"+(oi===item.a?"":" bad");
+            fb.innerHTML=(oi===item.a?"<strong>Riktig.</strong> ":"<strong>Riktig svar: "+LETTERS[item.a]+".</strong> ")+item.fb;
+            box.appendChild(fb);
+            updateScores();
+          });
+          opts.appendChild(b);
+        });
+      }else{
+        box.innerHTML=`<p class="stem"><span class="qn">${idx+1}.</span>${item.q}</p>
+          <textarea id="ta-${id}" placeholder="Skriv svaret ditt her — det lagres i nettleseren din."></textarea>
+          <div class="hintrow">
+            <button class="btn primary" type="button">Vis modellsvar</button>
+            <span class="wordcount">0 ord</span>
+            <span style="font-size:13.5px;color:var(--muted)">Hint: ${item.hint}</span>
+          </div>`;
+        const ta=box.querySelector("textarea"), wc=box.querySelector(".wordcount");
+        try{if(state["txt-"+id]) ta.value=state["txt-"+id]}catch(e){}
+        const count=()=>{
+          const n=ta.value.trim()?ta.value.trim().split(/\s+/).length:0;
+          wc.textContent=n+" ord";
+        };
+        count();
+        ta.addEventListener("input",()=>{count();state["txt-"+id]=ta.value;save()});
+        box.querySelector(".btn").addEventListener("click",e=>{
+          if(box.querySelector(".model")) return;
+          const m=document.createElement("div");
+          m.className="model";
+          m.innerHTML=`<span class="lab">Modellsvar</span><p>${item.model}</p>
+            <details open><summary>Sjekkliste — har svaret ditt disse?</summary><ul>${item.crit.map(c=>`<li>${c}</li>`).join("")}</ul></details>`;
+          box.appendChild(m);
+          e.target.textContent="Modellsvar vist";
+          e.target.disabled=true;
+          state[id]=true; save(); updateScores();
+        });
+      }
+      host.appendChild(box);
+    });
+  });
+
+  document.getElementById("ntasks").textContent=totalItems;
+
+  // TOC
+  const secs=[...document.querySelectorAll("section.ch")];
+  const toc=document.getElementById("toc");
+  toc.innerHTML=secs.map(s=>{
+    const num=s.querySelector(".ch-num").textContent;
+    const t=s.querySelector("h2").textContent;
+    return `<li><a href="#${s.id}" data-sec="${s.id}"><span class="n">${num}</span><span>${t}</span></a></li>`;
+  }).join("");
+
+  function updateScores(){
+    let done=0;
+    document.querySelectorAll("[data-quiz]").forEach(host=>{
+      const key=host.dataset.quiz, q=QUIZ[key];
+      if(!q) return;
+      let right=0, answered=0;
+      q.items.forEach((it,i)=>{
+        const id=key+"-"+i;
+        if(id in state){answered++; if(state[id]) right++;}
+      });
+      done+=answered;
+      const el=host.querySelector("[data-score]");
+      if(el) el.textContent=answered?`${right} / ${q.items.length} riktig`:"";
+      const sec=host.closest("section.ch");
+      const link=toc.querySelector(`a[data-sec="${sec.id}"]`);
+      if(link) link.classList.toggle("done",answered===q.items.length);
+    });
+    document.getElementById("progtext").textContent=`${done} av ${totalItems} oppgaver`;
+    document.getElementById("progbar").style.width=(done/totalItems*100).toFixed(1)+"%";
+  }
+
+  // restore answered MC state on load
+  document.querySelectorAll("[data-quiz]").forEach(host=>{
+    const key=host.dataset.quiz, q=QUIZ[key];
+    if(!q) return;
+    q.items.forEach((item,idx)=>{
+      const id=key+"-"+idx;
+      if(item.t==="mc"&&(id in state)){
+        const box=host.querySelectorAll(".q")[idx];
+        if(!box||box.dataset.done) return;
+        // mark as previously seen without revealing the picked option
+        const badge=document.createElement("div");
+        badge.className="fb"+(state[id]?"":" bad");
+        badge.innerHTML=state[id]?"<strong>Besvart riktig tidligere.</strong> Klikk et alternativ for å se forklaringen igjen.":"<strong>Besvart feil tidligere.</strong> Prøv igjen.";
+        box.appendChild(badge);
+      }
+    });
+  });
+  updateScores();
+
+  // scroll spy
+  const spy=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        toc.querySelectorAll("a").forEach(a=>a.classList.toggle("on",a.dataset.sec===e.target.id));
+      }
+    });
+  },{rootMargin:"-10% 0px -75% 0px"});
+  secs.forEach(s=>spy.observe(s));
+
+  document.getElementById("resetall").addEventListener("click",()=>{
+    state={};
+    try{localStorage.removeItem("prepro-v1")}catch(e){}
+    location.reload();
+  });
+})();
+</script>
+</body>
+</html>
