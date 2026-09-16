@@ -14,6 +14,8 @@ TRIMMED = DATA / "crop1_trimmed.csv"   # lages av 0_tilpass_datasett.py
 CLEAN = DATA / "crop1_clean.csv"       # lages av 2_manglende_verdier.py
 OUTLIERS = DATA / "crop1_outliers.csv"  # lages av 3_outliers.py
 ENCODED = DATA / "crop1_encoded.csv"   # lages av 4_encoding.py
+TRAIN = DATA / "crop1_train.csv"       # lages av 5_data_splitting.py
+TEST = DATA / "crop1_test.csv"         # lages av 5_data_splitting.py
 FIGURES = REPO / "assignment1" / "rapport" / "figurer"
 
 A, P, Y = "area_harvested_ha", "production_tonnes", "yield_hg_per_ha"
@@ -29,7 +31,9 @@ def read(path):
                 TRIMMED: "Kjør 0_tilpass_datasett.py først.",
                 CLEAN: "Kjør 0_tilpass_datasett.py og 2_manglende_verdier.py først.",
                 OUTLIERS: "Kjør 0_tilpass_datasett.py, 2_manglende_verdier.py og 3_outliers.py først.",
-                ENCODED: "Kjør 0_tilpass_datasett.py, 2_manglende_verdier.py, 3_outliers.py og 4_encoding.py først."}
+                ENCODED: "Kjør 0_tilpass_datasett.py, 2_manglende_verdier.py, 3_outliers.py og 4_encoding.py først.",
+                TRAIN: "Kjør 0_tilpass_datasett.py, 2_manglende_verdier.py, 3_outliers.py, 4_encoding.py og 5_data_splitting.py først.",
+                TEST: "Kjør 0_tilpass_datasett.py, 2_manglende_verdier.py, 3_outliers.py, 4_encoding.py og 5_data_splitting.py først."}
         raise SystemExit(f"Fant ikke {path}. {hint.get(path, '')}")
     return pd.read_csv(path)
 
