@@ -1,0 +1,34 @@
+% Draft for the Overleaf report, section "Handling Outliers".
+% Paste in place of the empty \textbf{a.} / \textbf{b.} in that section.
+% Continues the existing numbering: this is Table 6 and Figure 3.
+% Upload fig3_outliers.png to the Overleaf project's figure folder first.
+
+\textbf{a.}
+Because the three measurements span very different scales across crops, outliers are detected within each crop (\texttt{Item}) rather than on the column as a whole -- otherwise sugar cane would be compared with vanilla. Three methods are compared (Table~\ref{tab:outlier-methods}). The raw IQR rule ($1.5\times$IQR per crop) flags 13.1--13.9\% of area and production and 4.5\% of yield, the same figures already reported in Task 1b. As noted there, most of these are genuine: with mushrooms removed (Task 2), the highest yield is now Dutch greenhouse cucumbers (743 tonnes/ha), a real but different (greenhouse) production system. An ordinary z-score (raw scale, per crop) flags fewer values (1.5--2.2\%) but assumes an approximately symmetric distribution, which these right-skewed measurements do not have. IQR computed on $\log_{10}(x+1)$ flags fewer still (1.3\% for area and production, 2.9\% for yield). That a log transform alone removes most of what the raw IQR rule flags shows that the bulk of it reflects the shape of the distribution, not data errors.
+
+\textbf{b.}
+We transform area, production and yield with $\log_{10}(x+1)$ rather than removing or capping on the raw scale. The comparison above is the justification: since the transform alone cuts the flagged share from 13--14\% to 1.3--2.9\%, correcting the distribution is more accurate than deleting or capping roughly a tenth of the data, most of which is genuine variation (Task 1b). $\log_{10}(x+1)$ is used instead of $\log_{10}(x)$ because 31 rows have production and yield equal to 0 (genuine crop failure; area is always $>0$ for these); $\log_{10}(0)$ is undefined, while the log1p variant maps these rows to 0 without noticeably distorting the rest. Dropping these rows instead was rejected because crop failure is a real event, not an error, and would leave a small, unsystematic gap in 31 of 8,436 time series.
+
+The outliers that remain after the transform (1.3--2.9\%, by IQR on $\log_{10}$) are more likely to be genuinely extreme, since the transform has already corrected the skew. These are capped (winsorised) to the $1.5\times$IQR boundary per crop, on the log scale. This affects 1.3--2.9\% of cells (3,986 of 88,735 rows have at least one capped value) and changes no row, country or crop -- unlike Task 2, where deletion was the only option for values that could not be estimated. The columns \texttt{area\_harvested\_ha\_log10}, \texttt{production\_tonnes\_log10} and \texttt{yield\_hg\_per\_ha\_log10} are log-transformed and capped, ready for scaling in Task 4; \texttt{*\_capped} flags the capped cells, the same pattern as \texttt{imputed} in Task 2. The original, uncapped columns are kept unchanged for traceability.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lrrr}
+        \toprule
+        Column & IQR (raw), \% & IQR ($\log_{10}$), \% & z-score (raw), \% \\
+        \midrule
+        \texttt{area\_harvested\_ha} & 13.1 & 1.3 & 2.2 \\
+        \texttt{production\_tonnes} & 13.9 & 1.3 & 2.1 \\
+        \texttt{yield\_hg\_per\_ha} & 4.5 & 2.9 & 1.5 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Share of values flagged per crop, three detection methods.}
+    \label{tab:outlier-methods}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{fig3_outliers.png}
+    \caption{Box plots of $\log_{10}(x+1)$, before and after capping the remaining outliers, one panel per measurement.}
+    \label{fig:outliers}
+\end{figure}
