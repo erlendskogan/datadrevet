@@ -1,4 +1,4 @@
-"""Oppgave 4a - encoding av kategoriske kolonner i crop1_clean.csv.
+"""Oppgave 4a - encoding av kategoriske kolonner i crop1_outliers.csv.
 
 Label encoding: hver unike verdi i Area og Item erstattes med et heltall (0, 1,
 2, ...), tildelt i alfabetisk rekkefølge. Tallene har ingen betydning i seg selv
@@ -15,17 +15,21 @@ regresjon, k-NN) - for trebaserte modeller (beslutningstrær, random forest,
 gradient boosting) er dette mindre av et problem siden de kun splitter på
 terskelverdier og ikke antar noen avstand mellom kategoriene.
 
-Year holdes numerisk (som i oppgave 1) og encodes ikke. `imputed` er et flagg,
-ikke en kategori, og encodes heller ikke.
+Bygger videre på oppgave 3 (crop1_outliers.csv), som la til *_log10 (log-
+transformerte målinger, klare til skalering i 4b) og *_capped (flagg for
+cappede celler, samme rolle som `imputed`). Disse kolonnene røres ikke her -
+de følger bare med videre uendret. Year holdes numerisk (som i oppgave 1) og
+encodes ikke. `imputed` og *_capped er flagg, ikke kategorier, og encodes
+heller ikke.
 
-Inn: food-bank/crop1_clean.csv  ->  Ut: food-bank/crop1_encoded.csv
+Inn: food-bank/crop1_outliers.csv  ->  Ut: food-bank/crop1_encoded.csv
 Kjør: python assignment1/src/4_encoding.py
 """
 from sklearn.preprocessing import LabelEncoder
 
-from felles import CAT, CLEAN, ENCODED, read
+from felles import CAT, ENCODED, OUTLIERS, read
 
-df = read(CLEAN)
+df = read(OUTLIERS)
 
 encoders = {}
 for col in CAT:
