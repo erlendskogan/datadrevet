@@ -12,11 +12,13 @@ DATA = REPO / "food-bank"              # ligger utenfor git (se .gitignore)
 RAW = DATA / "crop1.csv"               # originalen fra Blackboard
 TRIMMED = DATA / "crop1_trimmed.csv"   # lages av 0_tilpass_datasett.py
 CLEAN = DATA / "crop1_clean.csv"       # lages av 2_manglende_verdier.py
+ENCODED = DATA / "crop1_encoded.csv"   # lages av 4_encoding.py
 FIGURES = REPO / "assignment1" / "rapport" / "figurer"
 
 A, P, Y = "area_harvested_ha", "production_tonnes", "yield_hg_per_ha"
 NUM = [A, P, Y]
 KEYS = ["Area", "Item", "Year"]
+CAT = ["Area", "Item"]
 
 
 def read(path):
@@ -24,7 +26,8 @@ def read(path):
     if not path.exists():
         hint = {RAW: "Legg crop1.csv fra Blackboard i food-bank/.",
                 TRIMMED: "Kjør 0_tilpass_datasett.py først.",
-                CLEAN: "Kjør 0_tilpass_datasett.py og 2_manglende_verdier.py først."}
+                CLEAN: "Kjør 0_tilpass_datasett.py og 2_manglende_verdier.py først.",
+                ENCODED: "Kjør 0_tilpass_datasett.py, 2_manglende_verdier.py og 4_encoding.py først."}
         raise SystemExit(f"Fant ikke {path}. {hint.get(path, '')}")
     return pd.read_csv(path)
 
