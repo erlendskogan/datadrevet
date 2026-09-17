@@ -1,19 +1,13 @@
 """Oppgave 4a - encoding av kategoriske kolonner i crop1_outliers.csv.
 
-Label encoding: hver unike verdi i Area og Item erstattes med et heltall (0, 1,
-2, ...), tildelt i alfabetisk rekkefølge. Tallene har ingen betydning i seg selv
-- de er bare en id - men gruppen har valgt label encoding fremfor one-hot for å
-holde antall kolonner nede (one-hot ville gitt 317 nye kolonner: 200 land + 117
-vekster). Tekstkolonnene erstattes (ikke beholdes ved siden av), siden koden og
-teksten er samme informasjon og modellen uansett bare skal se tallene. Mappingen
-mellom navn og kode skrives ut under kjøring til bruk i rapporten.
-
-Merk til rapporten: label encoding innfører en kunstig rekkefølge (Albania=1 <
-Brasil=20) som ikke finnes i dataene. Det bør nevnes som en bevisst avveining i
-begrunnelsen, særlig for modeller som tolker tall som avstand (f.eks. lineær
-regresjon, k-NN) - for trebaserte modeller (beslutningstrær, random forest,
-gradient boosting) er dette mindre av et problem siden de kun splitter på
-terskelverdier og ikke antar noen avstand mellom kategoriene.
+One-hot encoding: hver unike verdi i Area og Item får sin egen binære kolonne
+(0/1), f.eks. Area_Afghanistan, Area_Albania, .... Gruppen byttet fra label
+encoding til one-hot fordi label encoding innfører en kunstig rangordning
+(Albania=1 < Brasil=20) som ikke finnes i dataene, og som ville vært misvisende
+i PCA (oppgave 6): PCA er en lineær metode som bruker tallenes varians og
+korrelasjon direkte, og en vilkårlig alfabetisk rangordning ville gitt PCA-en
+meningsløs struktur å fange opp. Kostnaden er antall kolonner: 200 unike land
+og 117 unike vekster gir til sammen 317 nye binære kolonner.
 
 Bygger videre på oppgave 3 (crop1_outliers.csv), som la til *_log10 (log-
 transformerte målinger, klare til skalering i 4b) og *_capped (flagg for
@@ -25,29 +19,22 @@ heller ikke.
 Inn: food-bank/crop1_outliers.csv  ->  Ut: food-bank/crop1_encoded.csv
 Kjør: python assignment1/src/4_encoding.py
 """
-from sklearn.preprocessing import LabelEncoder
+import pandas as pd
 
 from felles import CAT, ENCODED, OUTLIERS, read
 
 df = read(OUTLIERS)
 
-encoders = {}
-for col in CAT:
-    enc = LabelEncoder()
-    df[col] = enc.fit_transform(df[col])
-    encoders[col] = enc
+counts = {col: df[col].nunique() for col in CAT}
+cols_before = df.shape[1]
+df = pd.get_dummies(df, columns=CAT, prefix=CAT, dtype=int)
 
 df.to_csv(ENCODED, index=False)
 
-print(f"Label-encodet {', '.join(CAT)} i {len(df):,} rader (tekst erstattet med kode)\n")
-for col in CAT:
-    enc = encoders[col]
-    print(f"{col}: {len(enc.classes_)} unike verdier, kodet 0-{len(enc.classes_) - 1}")
-    example = ", ".join(f"{name}={code}" for code, name in enumerate(enc.classes_[:5]))
-    print(f"  eksempel: {example}, ...")
-
-print("\nFørste rader:")
-print(df[CAT + ["Year"]].head().to_string(index=False))
+print(f"One-hot-encodet {', '.join(CAT)} i {len(df):,} rader\n")
+for col, n in counts.items():
+    print(f"{col}: {n} unike verdier -> {n} nye binære kolonner ({col}_<verdi>)")
+print(f"\nTotalt {sum(counts.values())} nye kolonner ({cols_before} kolonner før -> {df.shape[1]} etter)")
 
 print(f"\nResultat: {ENCODED.relative_to(ENCODED.parents[1])} ({ENCODED.stat().st_size / 1e6:.1f} MB), "
       f"{df.shape[1]} kolonner")
