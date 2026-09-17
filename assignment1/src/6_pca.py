@@ -4,9 +4,11 @@ Følger stegene i forelesningen («PCA in a nutshell»): korrelerte data ->
 sentrert (gjort i 4b) -> kovariansmatrise -> egenvektorer/egenverdier ->
 velg m < d komponenter -> projiser -> ukorrelerte data. sklearn gjør steg 3-6.
 
-Bare de tre *_scaled-kolonnene er med: Area/Item er label-koder uten avstand
-mellom seg, og Year er ikke skalert i 4b. PCA fittes kun på treningssettet,
-som scaleren i 4b. m velges slik at minst 95 % av variansen beholdes.
+Bare de tre *_scaled-kolonnene er med: Area/Item er one-hot-kodet (oppgave 4a)
+og gir ingen meningsfull avstand å ta med i PCA, og Year er ikke skalert i 4b.
+PCA fittes kun på treningssettet, som scaleren i 4b. m velges slik at minst
+95 % av variansen beholdes. Area/Item rekonstrueres fra one-hot-kolonnene kun
+for å identifisere radene i output-filene, ikke som input til PCA-en.
 
 Inn: food-bank/crop1_train_scaled.csv, crop1_test_scaled.csv (fra 4b_scaling.py)
 Ut:  food-bank/crop1_train_pca.csv, crop1_test_pca.csv,
@@ -41,6 +43,17 @@ def section(title):
 train = read(DATA / "crop1_train_scaled.csv")
 test = read(DATA / "crop1_test_scaled.csv")
 X_train, X_test = train[SCALED].to_numpy(), test[SCALED].to_numpy()
+
+
+def undummy(df, prefix):
+    """Rekonstruerer én tekstkolonne fra one-hot-kolonnene <prefix>_<verdi>."""
+    cols = [c for c in df.columns if c.startswith(f"{prefix}_")]
+    return df[cols].idxmax(axis=1).str[len(prefix) + 1:]
+
+
+for df in (train, test):
+    df["Area"] = undummy(df, "Area")
+    df["Item"] = undummy(df, "Item")
 
 section("Steg 1-2  Korrelasjon (train) og sentrering fra 4b")
 print(train[SCALED].corr().round(3).to_string())
