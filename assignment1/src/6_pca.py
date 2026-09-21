@@ -4,8 +4,9 @@ Følger stegene i forelesningen («PCA in a nutshell»): korrelerte data ->
 sentrert (gjort i 4b) -> kovariansmatrise -> egenvektorer/egenverdier ->
 velg m < d komponenter -> projiser -> ukorrelerte data. sklearn gjør steg 3-6.
 
-Bare de tre *_scaled-kolonnene er med: Area/Item er one-hot-kodet (oppgave 4a)
-og gir ingen meningsfull avstand å ta med i PCA, og Year er ikke skalert i 4b.
+Hovedkjøringen bruker bare de tre *_scaled-kolonnene. Year er ikke skalert i 4b,
+og one-hot-kolonnene for Area/Item (oppgave 4a) kjøres som en egen kontroll til
+slutt, der vi måler hva de faktisk bidrar med som input i stedet for å anta det.
 PCA fittes kun på treningssettet, som scaleren i 4b. m velges slik at minst
 95 % av variansen beholdes. Area/Item rekonstrueres fra one-hot-kolonnene kun
 for å identifisere radene i output-filene, ikke som input til PCA-en.
@@ -92,6 +93,23 @@ for label, X in [("train", X_train), ("test", X_test)]:
     X_hat = np.column_stack([X[:, :2], reg.predict(X[:, :2])])
     print(f"Dropp avling    {label}: MSE {np.mean((X - X_hat) ** 2):.5f} "
           f"(avling gjenskapt lineært fra areal og produksjon, R² {reg.score(X[:, :2], X[:, 2]):.4f})")
+
+section("Kontroll: hva om one-hot-kolonnene fra 4a tas med som input?")
+# Meningsfull test først etter byttet til one-hot: label-koder ville lagt en
+# falsk alfabetisk rangordning inn i kovariansmatrisen.
+dummies = [c for c in train.columns if c.startswith(("Area_", "Item_"))]
+D = train[dummies].to_numpy(float)
+full = PCA().fit(np.hstack([X_train, D]))
+m_full = int(np.argmax(full.explained_variance_ratio_.cumsum() >= THRESHOLD)) + 1
+print(f"{len(dummies)} one-hot-kolonner, varians {D.var(axis=0).mean():.5f} per kolonne mot "
+      f"1,0 for en standardisert måling (sum {D.var(axis=0).sum():.2f} av {3 + D.var(axis=0).sum():.2f})")
+print(f"m = {m_full} av {full.n_components_} komponenter for >= {THRESHOLD:.0%} varians "
+      f"(mot {m} av 3 uten dem)")
+for i in range(2):
+    vec = full.components_[i]
+    j = int(np.argmax(np.abs(vec[3:]))) + 3
+    print(f"PC{i + 1}: {(vec[:3] ** 2).sum():.1%} av vekten på målingene {np.round(vec[:3], 3)}, "
+          f"største one-hot-vekt {(SCALED + dummies)[j]} {vec[j]:+.2f}")
 
 pcs = names[:m]
 for df, Z, path in [(train, Z_train, DATA / "crop1_train_pca.csv"),
