@@ -163,7 +163,8 @@ Gruppen går også litt lenger enn det som kreves, på en nyttig måte: skjevhet
 2. **Figur 2 og teksten bruker forskjellig IQR-grunnlag.** Boksplottene bruker IQR på *alle*
    vekster samlet (da flagges ca. 16 % av areal og produksjon og 7 % av avlingene), mens teksten
    oppgir andeler med IQR *innenfor hver vekst*. Forskjellen blir ikke forklart, og leseren kan tro
-   at figuren viser tallene i teksten.
+   at figuren viser tallene i teksten. I tillegg beregnes kvartiler og værhår på rå skala, men vises
+   på log-akse. Nedre værhår går derfor alltid ned til minimum, og bare høye outliers kan vises.
 3. **Avling er avledet fra de andre kolonnene** (avling = produksjon × 10,000 / areal). Denne
    sammenhengen er et viktig funn fra utforskningen, men den nevnes først i oppgave 2. Den er
    avgjørende for outliers, skalering og PCA, og den ville passet naturlig her. Det gir ikke trekk,
@@ -213,7 +214,7 @@ I tillegg:
 | Påstand | Resultat |
 |---|---|
 | 9,448 rader med minst én manglende verdi, 5,622 helt tomme | ✅ |
-| Sopp: 745 rader, 44 av 70 land rapporterer aldri areal, en tredjedel av de delvise hullene (571 av 1,698 = 34 %) | ✅ |
+| Sopp: 745 rader, 44 av 70 land rapporterer aldri areal, en tredjedel av de delvise hullene (571 av 1,698 = 34 %) | ⚠️ Tallene stemmer, men tredjedelen gjelder bare med nevneren 1,698 (delvise hull før «ikke dyrket» slettes). Rapporten bruker ellers «partial gaps» om 1,127 rader |
 | 2,128 «ikke dyrket», 125 skjulte manglende verdier (medianproduksjon 9 t) | ✅ |
 | 1,127 delvise hull, fordelt på 256 imputerte og 871 slettede | ✅ |
 | CV for avling er 0.10 innen land og 0.71 mellom land; gjennomsnittet ligger 21 % over medianen | ✅ (medianverdier) |
@@ -240,8 +241,10 @@ I tillegg:
 **Svakheter og mulige merknader fra sensor**
 1. **De fem situasjonene er ikke en oppdeling av de 9,448 radene, og det blir ikke forklart.**
    Summen blir 9,747. Dette skyldes to ting. Sopp-tallet (745) omfatter også 174 komplette rader, og
-   de 125 skjulte verdiene er ikke blant de 9,448, men havner senere blant de 1,127 delvise hullene.
-   Teksten åpner med «9,448 lack at least one value … We found five situations», så leseren
+   de 125 skjulte verdiene telles to ganger. De mangler allerede avling (areal = 0 gir ingen avling)
+   og er derfor blant de 9,448, men de telles både som «hidden» og inne i de 1,127 delvise hullene
+   (9,747 − 174 − 125 = 9,448). I tillegg brukes «partial gaps» om to ulike mengder: «a third of the
+   partial gaps» regnes av 1,698 rader, mens «Partial gaps» senere er 1,127 rader. Teksten åpner med «9,448 lack at least one value … We found five situations», så leseren
    forventer at tallene summerer. En sensor som prøver å avstemme dem, blir forvirret.
 2. **Rapporten sier ikke hva som til slutt skjer med de 125 skjulte manglende verdiene.** Tabell 5
    sier bare «Area set to missing». Vår kontroll viser at 64 av dem blir imputert og 61 slettet
@@ -306,6 +309,7 @@ serier igjen (8,436 er tallet *før* slettingen). Oppgave 5 bruker riktig tall (
 | Påstand | Resultat |
 |---|---|
 | Tabell 6 (alle ni prosentene) | ✅ |
+| «the same figures already reported in Task 1b» | ⚠️ Nesten. Oppgave 1b er regnet på 98,101 rader og oppgave 3 på 88,735 rader (areal 13.2 % mot 13.1 %) |
 | Høyeste avling er nå nederlandske agurker, 743 t/ha | ✅ |
 | 31 rader med produksjon = avling = 0, der areal alltid er > 0 | ✅ |
 | 3,986 av 88,735 rader har minst én cappet verdi; ingen rader, land eller vekster endret | ✅ |
@@ -429,7 +433,8 @@ engelske etiketter, og rett 31 av 8,436 til 17 av 8,316.
   problem (k-NN).
 - **Skaleringen er faglig riktig gjennomført.** Den tilpasses bare på treningssettet, og det er
   forklart hvorfor. Mange grupper gjør dette feil, så det er et klart plusspoeng.
-- Valget av standardisering fremfor min-max er begrunnet og knyttet til valgene i oppgave 3.
+- Valget av standardisering fremfor min-max er begrunnet og knyttet til valgene i oppgave 3, men
+  argumentet holder dårlig (se merknad 10).
 - Det er riktig og begrunnet å ikke skalere binære kolonner.
 
 **Svakheter og mulige merknader fra sensor**
@@ -441,7 +446,8 @@ engelske etiketter, og rett 31 av 8,436 til 17 av 8,316.
    har verdier rundt 2015, som er i en helt annen størrelsesorden enn de standardiserte kolonnene.
    Etter gruppens eget argument (gradientbaserte modeller er følsomme for skala) burde `Year`
    derfor vært skalert. Dette er en intern inkonsistens.
-3. **Feil tall for spennene.** Avlingen spenner fra 2.6 til 6.7, ikke fra 0 til 7. Spennene er
+3. **Feil tall for spennene.** Avlingen spenner fra 2.6 til 6.7, ikke fra 0 til 7, og areal går
+   opp til 7.65, ikke 7. Spennene er
    dessuten ganske like (alle ligger innenfor 0–9). Det sterkere argumentet ville vært at
    standardavvikene er ulike (1.25, 1.31 og 0.59), men det brukes ikke. Argumentet for skalering
    blir dermed svakere enn det kunne vært.
@@ -468,6 +474,16 @@ engelske etiketter, og rett 31 av 8,436 til 17 av 8,316.
 9. Små ting: typografiske anførselstegn er feil (”more” i stedet for “more”), og
    kodekommentaren i `4b_scaling.py` omtaler fortsatt «heltallskoder fra oppgave 4a», som er igjen
    fra label encoding. Kodekommentaren er ikke synlig i rapporten.
+10. **Argumentet mot min-max er snudd.** Gruppen sier at min-max «would still be anchored to each
+    column's two remaining endpoints». Men cappingen i oppgave 3 har nettopp fjernet de ekstreme
+    endepunktene, og det gjør min-max *tryggere*, ikke dårligere. Standardisering er et forsvarlig
+    valg, men begrunnelsen holder ikke.
+11. **Det ferdige datasettet har tre versjoner av hver måling.** `crop1_train_scaled.csv` inneholder
+    råkolonnene (uskalert, opptil 7.7·10⁸), `*_log10` (uskalert) og `*_scaled`. Listen over kolonner
+    som ikke skaleres, nevner ikke råkolonnene, og rapporten sier aldri hvilke kolonner som er
+    features. Dette henger sammen med at modellformålet mangler (se innledningen, merknad 1).
+12. **«Standard tooling represents one-hot columns as a sparse matrix»** stemmer generelt, men er
+    ikke det gruppen gjorde. Koden bruker `pd.get_dummies(dtype=int)`, som er tett, og skriver til CSV.
 
 ### Konklusjon
 4a er sterk og fullt ut begrunnet. 4b er faglig riktig gjennomført (skaleringen tilpasses bare på
@@ -476,7 +492,8 @@ begrunnelsen for `Year` motsier oppgave 1. Den synlige mangelen på korrektur (d
 «textbfa.») trekker ned på dokumentasjonskvaliteten. Ingen begrunnelser mangler helt, så det blir
 ikke 10 poengs trekk.
 
-**Poeng: 26 / 30** (spenn 24–27). Fordelingen er omtrent 14/15 på a og 12/15 på b.
+**Poeng: 26 / 30** (spenn 24–27). Oppgaveteksten sier ikke hvordan de 30 poengene fordeles mellom
+a og b. Hvis vi antar 15/15, blir fordelingen omtrent 14/15 på a og 12/15 på b.
 
 **Forslag til forbedring:**
 - Slett Tabell 7 eller 8, og rett «textbfa.».
@@ -533,6 +550,10 @@ ikke 10 poengs trekk.
    1 vekst. De fire seriene kunne enkelt vært lagt i treningssettet (en tvungen gruppesplitt), og da
    ville lekkasjen vært løst. Gruppen erkjenner et reelt problem, men velger den løsningen som har
    problemet, med et argument som veier lite. En sensor vil sannsynligvis påpeke dette.
+   Argumentet er dessuten teknisk feil. Rapporten sier at kategorien da blir «unseen for the
+   encoding in Task 4», men encodingen gjøres på hele datasettet *før* splittingen
+   (`4_encoding.py` kjøres før `5_data_splitting.py`). Encodingen kan derfor ikke mangle en
+   kategori. Problemet ville vært at *modellen* aldri har sett kategorien under trening.
 2. **Tidsbasert splitt er ikke vurdert.** Dataene er tidsserier, og det naturlige alternativet er å
    trene på 2010–2018 og teste på 2019–2020. Det gir tilfeldigvis **82/18**, altså nesten nøyaktig
    80-20, beholder alle land og vekster i treningssettet og speiler hvordan en modell faktisk brukes
@@ -837,7 +858,7 @@ En slik sensor vil trolig ligge **i øvre del av spennet vårt eller over det**.
 | **Sum ordinære** | **90** | **77** | **71–82** |
 | 6 Bonus (PCA) | +10 | +9 | 8–10 |
 | Ordgrense (risiko) | – | 0 | 0 til −5 |
-| **Totalt** | **100** | **86** | **≈ 80–92** |
+| **Totalt** | **100** | **86** | **79–92** (74–92 med fullt trekk for ordgrensen) |
 
 **Justering for helhet:** Ingen egen justering. Svakhetene i helheten (manglende formål,
 selektiv lekkasjehåndtering og tidsseriene) er allerede trukket i oppgavene der de slår ut. Styrkene
@@ -852,4 +873,4 @@ aldri blir sagt, prinsipper som brukes i én oppgave og glemmes i en annen, og e
 korrekturrunde som mangler. Med en times redaksjonelt arbeid (se «Rask gevinst» under formelle
 krav) og én setning om målvariabel i innledningen ville besvarelsen trolig ligget på **90+**.
 
-**Endelig vurdering: 86 / 100 (77/90 + 9 bonus)**, realistisk spenn hos en sensor ≈ 80–92.
+**Endelig vurdering: 86 / 100 (77/90 + 9 bonus)**, realistisk spenn hos en sensor 79–92 (74–92 hvis sensor trekker fullt for ordgrensen).
