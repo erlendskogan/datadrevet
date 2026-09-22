@@ -59,6 +59,7 @@ grunnlaget for alle valgene senere i besvarelsen.
 | Ti land finnes bare før 2010 (USSR, Jugoslavia …) | ✅ Stemmer |
 | «32 countries only appear later» | ⚠️ Upresist. 32 land dukker opp etter **1961**, men bare **2** etter 2010. Setningen kan leses som at 32 land kommer til etter 2010. |
 | Sudan (former) 2010–2011, Sudan og South Sudan 2012–2020 | ✅ Stemmer |
+| «keeps all 118 crops … for the encoding task» | ⚠️ Encodingen i 4a har 117 vekster, fordi soppen fjernes i oppgave 2 (`crop1_encoded.csv` har 117 `Item_`-kolonner) |
 
 ### Vurdering
 
@@ -70,8 +71,7 @@ grunnlaget for alle valgene senere i besvarelsen.
 - Avgrensningen er begrunnet med tall, og alternativet (å velge ut hovedvekster) er vurdert og
   forkastet med en god grunn: det ville fjernet det meste av de manglende dataene som oppgave 2 skal
   håndtere.
-- Arbeidet er åpent dokumentert. Tabell 1 gjør hvert steg etterprøvbart, og alle tall vi kontrollerte
-  stemmer.
+- Arbeidet er åpent dokumentert. Tabell 1 gjør hvert steg etterprøvbart, og tallene i Tabell 1 stemmer.
 - Skillet mellom å *tilpasse* datasettet og å *rense* det (oppgave 2 og 3) er tydelig og riktig.
 
 **Svakheter og mulige merknader fra sensor**
@@ -87,7 +87,8 @@ grunnlaget for alle valgene senere i besvarelsen.
    størrelsesargumentet er svakt, siden 480k rader ikke er et reelt problem. Den sterkeste
    begrunnelsen er stabile landgrenser og mer konsistent rapportering. En streng sensor kunne spurt om
    dette er seleksjon som burde vært drøftet under Data Cleaning.
-4. **Den upresise setningen om «32 countries»** (se tabellen over). Dette er en liten presisjonsfeil.
+4. **Den upresise setningen om «32 countries»** og **«118 crops … for the encoding task»** (encodingen
+   har 117 vekster, se tabellen over). Dette er små presisjonsfeil.
 5. **«Two properties … make it unsuitable»**: At `Value` blander enheter er strengt tatt ikke en feil
    i dataene. Det er langt format, og `Element` og `Unit` skiller enhetene. Å kalle det noe som ble
    «corrected» er litt overdrevet, men selve pivoteringen er riktig.
@@ -100,8 +101,8 @@ grunnlaget for alle valgene senere i besvarelsen.
    oppgave 5, så dette er bare et notat.
 
 ### Konklusjon
-Innledningen gir mening, er faglig korrekt og er uvanlig godt begrunnet og dokumentert. Alle
-tallene vi kontrollerte stemmer. Den gir ingen poeng og derfor heller ikke noe trekk. De viktigste
+Innledningen gir mening, er faglig korrekt og er uvanlig godt begrunnet og dokumentert. Nesten
+alle tallene vi kontrollerte stemmer (unntakene er «32 countries» og «118 crops»). Den gir ingen poeng og derfor heller ikke noe trekk. De viktigste
 merknadene er at målvariabel og modellformål mangler, og at den bruker en stor del av ordgrensen.
 Totalinntrykket er **meget sterkt**.
 
@@ -130,8 +131,11 @@ gjelder ikke her.
 | Unike verdier i kategoriske kolonner | 200 land og 118 vekster, spredning i antall rader per kategori, 13 «nes»-kategorier | ✅ |
 
 Gruppen går også litt lenger enn det som kreves, på en nyttig måte: skjevheten kvantifiseres
-(gjennomsnittet er over 50 ganger medianen), og funnene knyttes eksplisitt til senere oppgaver
-(nuller til oppgave 3, antall kategorier til encodingen i oppgave 4).
+(gjennomsnittlig produksjon er over 50 ganger medianen), og funnene knyttes eksplisitt til senere oppgaver
+(nuller til oppgave 3, antall kategorier til encodingen i oppgave 4). Pekeren om nullene er likevel
+misvisende. Rapporten skriver «Their handling follows in Task 3», men nesten alle nullene fjernes i
+oppgave 2 («ikke dyrket» og skjulte manglende verdier). I `crop1_clean.csv` er det 0 nuller igjen i
+areal og bare 31 i produksjon og avling.
 
 ### Kontroll av påstandene (kjørt mot `food-bank/crop1_trimmed.csv`)
 | Påstand | Resultat |
@@ -144,7 +148,7 @@ Gruppen går også litt lenger enn det som kreves, på en nyttig måte: skjevhet
 | IQR innenfor hver vekst: 13–14 % (areal 13.2 %, produksjon 13.9 %) og 4.5 % (avling) | ✅ |
 | India ris 45 mill. ha, Brasil sukkerrør 769 mill. t, nederlandsk sopp 5,085 t/ha | ✅ |
 | Nuller: 2,179 / 2,132 / 30 | ✅ |
-| Rader per kategori fra 11 (Faroe Islands, Tallowtree seed) til 1,298 **(China)** | ⚠️ Tallet stemmer, men landet heter **«China, mainland»**. I innledningen står det at «China» er fjernet. |
+| Rader per kategori fra 11 (Faroe Islands, Tallowtree seed) til 1,298 **(China)** | ⚠️ Tallene stemmer (Marshall Islands har også 11 rader), men landet heter **«China, mainland»**. I innledningen står det at «China» er fjernet. |
 | 13 «nes»-vekster med 12,944 rader | ✅ |
 
 ### Vurdering
@@ -214,7 +218,7 @@ I tillegg:
 | Påstand | Resultat |
 |---|---|
 | 9,448 rader med minst én manglende verdi, 5,622 helt tomme | ✅ |
-| Sopp: 745 rader, 44 av 70 land rapporterer aldri areal, en tredjedel av de delvise hullene (571 av 1,698 = 34 %) | ⚠️ Tallene stemmer, men tredjedelen gjelder bare med nevneren 1,698 (delvise hull før «ikke dyrket» slettes). Rapporten bruker ellers «partial gaps» om 1,127 rader |
+| Sopp: 745 rader, 44 av 70 land rapporterer aldri areal, en tredjedel av de delvise hullene (571 av 1,698 = 34 %) | ⚠️ Tallene stemmer, men rapporten oppgir ikke nevneren. Med rapportens egne definisjoner er soppen 558 av 1,685 delvise hull før fjerningen (33 %; 13 av de 571 soppradene med manglende verdier er «ikke dyrket»). Det er en annen mengde enn de 1,127 som senere kalles «partial gaps» |
 | 2,128 «ikke dyrket», 125 skjulte manglende verdier (medianproduksjon 9 t) | ✅ |
 | 1,127 delvise hull, fordelt på 256 imputerte og 871 slettede | ✅ |
 | CV for avling er 0.10 innen land og 0.71 mellom land; gjennomsnittet ligger 21 % over medianen | ✅ (medianverdier) |
@@ -244,7 +248,8 @@ I tillegg:
    de 125 skjulte verdiene telles to ganger. De mangler allerede avling (areal = 0 gir ingen avling)
    og er derfor blant de 9,448, men de telles både som «hidden» og inne i de 1,127 delvise hullene
    (9,747 − 174 − 125 = 9,448). I tillegg brukes «partial gaps» om to ulike mengder: «a third of the
-   partial gaps» regnes av 1,698 rader, mens «Partial gaps» senere er 1,127 rader. Teksten åpner med «9,448 lack at least one value … We found five situations», så leseren
+   partial gaps» gjelder de delvise hullene *før* soppen fjernes (558 av 1,685), mens
+   «Partial gaps» senere er 1,127 rader. Teksten åpner med «9,448 lack at least one value … We found five situations», så leseren
    forventer at tallene summerer. En sensor som prøver å avstemme dem, blir forvirret.
 2. **Rapporten sier ikke hva som til slutt skjer med de 125 skjulte manglende verdiene.** Tabell 5
    sier bare «Area set to missing». Vår kontroll viser at 64 av dem blir imputert og 61 slettet
@@ -309,14 +314,14 @@ serier igjen (8,436 er tallet *før* slettingen). Oppgave 5 bruker riktig tall (
 | Påstand | Resultat |
 |---|---|
 | Tabell 6 (alle ni prosentene) | ✅ |
-| «the same figures already reported in Task 1b» | ⚠️ Nesten. Oppgave 1b er regnet på 98,101 rader og oppgave 3 på 88,735 rader (areal 13.2 % mot 13.1 %) |
+| «the same figures already reported in Task 1b» | ⚠️ Nesten. Oppgave 1b er regnet på `crop1_trimmed` (før rensingen) og oppgave 3 på de 88,735 rensede radene (areal 13.2 % mot 13.1 %) |
 | Høyeste avling er nå nederlandske agurker, 743 t/ha | ✅ |
 | 31 rader med produksjon = avling = 0, der areal alltid er > 0 | ✅ |
 | 3,986 av 88,735 rader har minst én cappet verdi; ingen rader, land eller vekster endret | ✅ |
 | «a small, unsystematic gap in **31 of 8,436** time series» | ❌ De 31 radene fordeler seg på **17** serier, og etter oppgave 2 finnes det **8,316** serier, ikke 8,436 |
 | **Hvilken side som cappes** (sjekket av oss, ikke nevnt i rapporten) | ⚠️ **Rundt 75 % av de cappede verdiene ligger i den *nedre* halen og blir *hevet*.** Areal: 870 av 1,160. Produksjon: 898 av 1,132. Avling: 1,937 av 2,575 |
 | **De 31 radene med avlingssvikt** (sjekket av oss) | ❌ **Avlingen i alle 31 radene cappes opp** fra 0 (for eksempel til omtrent 1,329 hg/ha for lin), og produksjonen cappes opp i 18 av dem. Dette er nettopp de verdiene gruppen argumenterer for å beholde som «genuine crop failure» |
-| Identiteten avling = produksjon × 10,000 / areal etter capping (sjekket av oss) | ⚠️ Brytes med mer enn 0.1 på log-skala i 2,578 av 3,986 cappede rader. Dette nevnes først i oppgave 6 |
+| Identiteten avling = produksjon × 10,000 / areal etter capping (sjekket av oss) | ⚠️ Brytes med mer enn 0.1 på log-skala i 2,578 av 3,986 cappede rader. Dette nevnes først i oppgave 6. Også 205 rader uten capping avviker med mer enn 0.1, på grunn av log10(x+1), slik rapporten selv forklarer i oppgave 6 |
 
 ### Vurdering
 
@@ -332,15 +337,17 @@ serier igjen (8,436 er tallet *før* slettingen). Oppgave 5 bruker riktig tall (
 - Det finnes en begrunnelse for både a og b, så det blir ikke 10 poengs trekk.
 
 **Svakheter og mulige merknader fra sensor**
-1. **Begrunnelsen for cappingen er selvmotsigende** (synlig for sensor i teksten). Gruppen skriver at
-   de gjenværende outlierne «are more likely to be genuinely extreme», og capper dem likevel. Hvis
-   verdiene er ekte, er det nettopp *ikke* et argument for å endre dem. Teksten forklarer ikke hvorfor
-   ekte ekstreme verdier skal cappes, for eksempel for å gjøre modellen robust. Dette er den svakeste
-   begrunnelsen i besvarelsen så langt.
+1. **Begrunnelsen for cappingen er ufullstendig** (synlig for sensor i teksten). Gruppen skriver at
+   de gjenværende outlierne «are more likely to be genuinely extreme, since the transform has already
+   corrected the skew». Det betyr at de er ekte *statistiske* outliers, ikke at de er feil. Teksten
+   forklarer likevel ikke hvorfor slike verdier skal cappes og ikke beholdes, for eksempel for å gjøre
+   modellen robust. Det står også i kontrast til 1b og 3a, der de ekstreme verdiene omtales som ekte
+   variasjon. Dette er den svakeste begrunnelsen i besvarelsen så langt.
 2. **Cappingen hever hovedsakelig *små* verdier** (synlig i praksis, ikke i teksten). På log-skala
-   blir den nedre halen lang: 5 ha gir log ≈ 0.8, mens medianen ligger rundt 3.5. Derfor er rundt
-   75 % av de cappede verdiene små land og små produsenter som får verdien sin *hevet*. Dette er ekte
-   data som endres, og det står i direkte kontrast til argumentet om at outliers er «genuine
+   blir den nedre halen lang: 5 ha gir log ≈ 0.8, mens medianen ligger rundt 3.5. Derfor ligger rundt
+   75 % av de cappede verdiene i den nedre halen og blir *hevet*. Omtrent halvparten av dem er lave
+   avlinger (1,937), og resten er små arealer eller små produksjonsvolum (870 + 898), altså små land og
+   små produsenter. Dette er ekte data som endres, og det står i direkte kontrast til argumentet om at outliers er «genuine
    variation in country size» (oppgave 1b). Gruppen drøfter aldri nedre og øvre grense hver for seg.
 3. **Argumentet om nullene blir undergravd.** Gruppen begrunner log10(x+1) med at avlingssvikt er en
    ekte hendelse som skal beholdes, men cappingen løfter avlingen i alle 31 radene opp fra 0.
@@ -365,7 +372,7 @@ serier igjen (8,436 er tallet *før* slettingen). Oppgave 5 bruker riktig tall (
 ### Konklusjon
 Delen om *deteksjon* er meget sterk, og ideen om å bruke IQR på log-skala som diagnose er bedre enn
 det som forventes. Delen om *håndtering* har en reell svakhet. Cappingen etter transformasjonen er
-dårlig begrunnet («genuinely extreme», men cappes likevel), den rammer mest små, ekte verdier i den
+dårlig begrunnet (det står ikke hvorfor ekte outliers skal cappes), den rammer mest små, ekte verdier i den
 nedre halen, og den motsier gruppens eget argument om nullene. Det kommer også feil tall, en
 lekkasje som ikke nevnes, og en figur som verken er henvist til eller på riktig språk. Det blir ikke
 10 poengs trekk, siden begrunnelsen finnes, men kvaliteten på den trekker ned.
@@ -432,9 +439,15 @@ engelske etiketter, og rett 31 av 8,436 til 17 av 8,316.
 - Gruppen tar selv opp motargumentet om mange kolonner, og drøfter når det faktisk ville vært et
   problem (k-NN).
 - **Skaleringen er faglig riktig gjennomført.** Den tilpasses bare på treningssettet, og det er
-  forklart hvorfor. Mange grupper gjør dette feil, så det er et klart plusspoeng.
-- Valget av standardisering fremfor min-max er begrunnet og knyttet til valgene i oppgave 3, men
-  argumentet holder dårlig (se merknad 10).
+  forklart hvorfor. Mange grupper gjør dette feil, så det er et klart plusspoeng. Én detalj i
+  forklaringen er likevel feil. Rapporten sier at med en egen scaler per sett ville «the test set's
+  distribution … have influenced how the training data is represented». Men treningsdataene
+  skaleres på samme måte i begge tilfeller. Problemet er at testsettet da skaleres med sine egne
+  parametere, slik at informasjon fra testsettet brukes og de to settene får ulik skala.
+- Valget av standardisering fremfor min-max er begrunnet og knyttet til valgene i oppgave 3.
+  Argumentet holder: i praksis er min og maks for hele kolonnen uendret etter cappingen for areal
+  (0.03–7.65) og produksjon (0–8.89). For avling endres spennet (0–6.87 → 2.59–6.71). Min-max
+  ville uansett vært styrt av de gjenværende endepunktene.
 - Det er riktig og begrunnet å ikke skalere binære kolonner.
 
 **Svakheter og mulige merknader fra sensor**
@@ -460,8 +473,8 @@ engelske etiketter, og rett 31 av 8,436 til 17 av 8,316.
 5. **Modellformålet dukker opp her for første gang, uten å være definert.** «Our downstream use is
    regression and PCA» er første gang *regresjon* nevnes. Det står aldri hva som skal predikeres
    (se merknad 1 om innledningen). Med lineær regresjon gir full one-hot for to kategoriske kolonner
-   i tillegg **perfekt multikollinearitet** (dummy-fellen), som løses ved å droppe én kolonne per
-   kategori. Dette nevnes ikke, selv om gruppen selv trekker fram regresjon.
+   i tillegg **perfekt multikollinearitet** (dummy-fellen), som løses ved å droppe én dummykolonne
+   per kategorisk variabel (én for `Area` og én for `Item`). Dette nevnes ikke, selv om gruppen selv trekker fram regresjon.
 6. **Påstanden om at det er få kolonner er litt lettvint.** I oppgave 1 skrev gruppen at «the high
    number of categories affects the choice of encoding in Task 4». Her avvises problemet raskt, og
    alternativer som target encoding, frequency encoding eller gruppering av sjeldne kategorier
@@ -474,15 +487,11 @@ engelske etiketter, og rett 31 av 8,436 til 17 av 8,316.
 9. Små ting: typografiske anførselstegn er feil (”more” i stedet for “more”), og
    kodekommentaren i `4b_scaling.py` omtaler fortsatt «heltallskoder fra oppgave 4a», som er igjen
    fra label encoding. Kodekommentaren er ikke synlig i rapporten.
-10. **Argumentet mot min-max er snudd.** Gruppen sier at min-max «would still be anchored to each
-    column's two remaining endpoints». Men cappingen i oppgave 3 har nettopp fjernet de ekstreme
-    endepunktene, og det gjør min-max *tryggere*, ikke dårligere. Standardisering er et forsvarlig
-    valg, men begrunnelsen holder ikke.
-11. **Det ferdige datasettet har tre versjoner av hver måling.** `crop1_train_scaled.csv` inneholder
+10. **Det ferdige datasettet har tre versjoner av hver måling.** `crop1_train_scaled.csv` inneholder
     råkolonnene (uskalert, opptil 7.7·10⁸), `*_log10` (uskalert) og `*_scaled`. Listen over kolonner
     som ikke skaleres, nevner ikke råkolonnene, og rapporten sier aldri hvilke kolonner som er
     features. Dette henger sammen med at modellformålet mangler (se innledningen, merknad 1).
-12. **«Standard tooling represents one-hot columns as a sparse matrix»** stemmer generelt, men er
+11. **«Standard tooling represents one-hot columns as a sparse matrix»** stemmer generelt, men er
     ikke det gruppen gjorde. Koden bruker `pd.get_dummies(dtype=int)`, som er tett, og skriver til CSV.
 
 ### Konklusjon
@@ -557,12 +566,14 @@ a og b. Hvis vi antar 15/15, blir fordelingen omtrent 14/15 på a og 12/15 på b
 2. **Tidsbasert splitt er ikke vurdert.** Dataene er tidsserier, og det naturlige alternativet er å
    trene på 2010–2018 og teste på 2019–2020. Det gir tilfeldigvis **82/18**, altså nesten nøyaktig
    80-20, beholder alle land og vekster i treningssettet og speiler hvordan en modell faktisk brukes
-   (å predikere fremtiden). Dette er det største faglige hullet i oppgaven.
+   (å predikere fremtiden). Den løser likevel ikke lekkasjen gruppen peker på: 7,985 av 8,316 serier
+   har rader i begge periodene, og imputeringsmedianene bruker også 2019–2020. Det er bare en
+   gruppesplitt (merknad 1) som fjerner begge. Dette er det største faglige hullet i oppgaven.
 3. **«Hvordan splitting forhindrer overfitting» er bare delvis besvart.** Gruppen forklarer at
-   splitting *oppdager* overfitting, men ikke hvordan det *forhindrer* den. Svaret er at testresultatet
-   (eller aller helst et eget valideringssett eller kryssvalidering) brukes til å velge modell,
-   kompleksitet, regularisering og tidlig stopp, og at testsettet bare skal brukes én gang til slutt.
-   Validerings- og testsett og kryssvalidering nevnes ikke. Svaret finnes, så det blir ikke 10 poengs
+   splitting *oppdager* overfitting, men ikke hvordan det *forhindrer* den. Svaret er at et eget
+   valideringssett (eller kryssvalidering på treningsdataene) brukes til å velge modell,
+   kompleksitet, regularisering og tidlig stopp, mens testsettet bare brukes én gang til slutt.
+   Valideringssett (til forskjell fra testsettet) og kryssvalidering nevnes ikke. Svaret finnes, så det blir ikke 10 poengs
    trekk, men det er ufullstendig.
 4. **Begrunnelsen for 80-20 fremfor 70-30 er generisk.** «Stort datasett» og «balanse» er riktig,
    men gruppen tallfester ikke, for eksempel ved å si at 17,747 testrader gir et presist anslag.
@@ -574,14 +585,16 @@ a og b. Hvis vi antar 15/15, blir fordelingen omtrent 14/15 på a og 12/15 på b
 
 ### Konklusjon
 Oppgave 5 er korrekt gjennomført, og drøftingen av tidsserier og lekkasje er sterkere enn forventet.
-Men når gruppen først har identifisert problemet, blir det mer synlig at løsningene (en tvungen
-gruppesplitt eller en tidsbasert splitt) avvises eller ikke vurderes. Forklaringen av hvordan
+Men når gruppen først har identifisert problemet, blir det mer synlig at løsningen (en tvungen
+gruppesplitt) avvises på svakt grunnlag, og at en tidsbasert splitt ikke vurderes. Forklaringen av hvordan
 splitting *forhindrer* overfitting er også ufullstendig.
 
 **Poeng: 8 / 10** (spenn 7–9).
 
-**Forslag til forbedring:** Bruk en tidsbasert splitt (2010–2018 mot 2019–2020, som gir 82/18),
-eller en gruppesplitt der de 4 enkeltseriene tvinges inn i treningssettet. Legg til én til to
+**Forslag til forbedring:** Bruk en gruppesplitt der de 4 enkeltseriene tvinges inn i
+treningssettet, som fjerner lekkasjen mellom rader i samme serie. Alternativt kan en tidsbasert splitt
+(2010–2018 mot 2019–2020, som gir 82/18) gi et realistisk prognoseoppsett, men den fjerner ikke
+lekkasjen. Legg til én til to
 setninger om valideringssett og kryssvalidering som mekanismen som forhindrer overfitting.
 
 ---
@@ -709,7 +722,7 @@ Gruppen oppgir **2984 ord**, altså 16 ord under grensen. Vår kontroll med teks
 
 - Tallet 2984 er troverdig hvis man bruker en teller som *texcount* og ser bort fra tall,
   matematikk og tabellinnhold. **En sensor som kopierer teksten inn i Word, vil få mellom 3,250 og
-  3,650 ord.**
+  3,660 ord.**
 - Oppgaven sier ikke eksplisitt om tabellinnhold teller. Gruppens egen README pekte på denne
   uklarheten og anbefalte å avklare den med faglærer.
 - Oppgaven sier ingenting om trekk for å gå over ordgrensen, bare «Please be within this limit».
@@ -756,7 +769,8 @@ en *undersøkelse av dataene* og ikke på en standardoppskrift:
 - Gruppen testet om one-hot-kolonnene faktisk bidrar i PCA i stedet for å anta det.
 
 Påstandene er nesten alltid tallfestet. Av flere titalls tall vi kontrollerte mot dataene var bare
-3–4 feil, og ingen av dem endrer en konklusjon. Rapporten er også uvanlig ærlig om begrensninger,
+rundt fem feil eller upresise («32 countries», 117 og ikke 118 vekster, «China» i stedet for
+«China, mainland», «31 of 8,436» i stedet for 17 av 8,316, og spennene i 4b), og ingen av dem endrer en konklusjon. Rapporten er også uvanlig ærlig om begrensninger,
 som lekkasje ved imputering og splitting og den lille gevinsten av PCA. Vurderingskriterium 2
 (*justification*) er derfor gjennomgående godt oppfylt, og det finnes ingen deloppgave med 10 poengs
 trekk.
@@ -766,7 +780,7 @@ Leser man rapporten som *én* pipeline og ikke som seks separate svar, kommer de
 gjennomgående svakheter. Hver av dem er liten i én oppgave, men sammen trekker de helheten ned.
 
 **1. Rapporten mangler et formål.** Oppgaven handler om å klargjøre data «for modeling», men det står
-aldri hva modellen skal predikere. Ordet «regression» dukker opp for første gang midt i 4a. Uten en
+aldri hva modellen skal predikere. Ordet «regression» dukker opp for første gang i den siste setningen i 4a. Uten en
 målvariabel henger flere valg i løse luften:
 - Skal avling være målet? Da er det problematisk å imputere den (oppgave 2) og cappe den (oppgave 3).
 - Hvilke modeller skal skaleringen tilpasses (oppgave 4b)?
@@ -794,30 +808,35 @@ skaleringen (4b) og PCA (6) tilpasses bare på treningssettet, og dette forklare
 rekkefølgen i pipelinen er imputering (2) → capping (3) → encoding (4a) → splitting (5) →
 skalering (4b) → PCA (6). Både imputeringsmedianene og cappinggrensene beregnes dermed på hele
 datasettet. Lekkasjen erkjennes for imputeringen, men ikke for cappingen, og begrunnelsen for å
-godta den («the order follows the assignment») er ikke faglig. En sensor som leser 4b etter 2 og 3,
+godta den («the order follows the assignment and only 256 rows (0.3%) are imputed») er bare delvis
+faglig. At lekkasjen er liten, er et gyldig argument, men rekkefølgen i oppgaveteksten er det ikke. En sensor som leser 4b etter 2 og 3,
 vil se at gruppen kjente løsningen, som er å splitte først og tilpasse alt på treningssettet, men
 ikke brukte den konsekvent.
 
-**4. Tidsseriene blir oppdaget sent og ikke utnyttet.** At dataene er 8,316 serier med 11 år hver,
-er avgjørende for tre av oppgavene, men det tas bare opp i oppgave 5, og da som en begrensning:
+**4. Tidsseriene blir oppdaget sent og ikke utnyttet.** At dataene er 8,316 serier, de fleste (93 %) med 11 år,
+er avgjørende for tre av oppgavene. Tidsseriene nevnes i innledningen, 2c og 3b, og stabiliteten
+over tid brukes i 2c som begrunnelse for medianen per land. Konsekvensene for metodevalget drøftes
+likevel først i oppgave 5, og da bare som en begrensning:
 - **Oppgave 2:** Interpolasjon mellom nabo-år er det naturlige alternativet til medianen per land.
 - **Oppgave 3:** Et hopp i en serie er en bedre indikator på feil enn IQR på tvers av land.
 - **Oppgave 5:** En tidsbasert splitt (2010–2018 mot 2019–2020) gir 82/18, beholder alle
-  kategorier og løser lekkasjen gruppen selv peker på.
+  kategorier i treningssettet og gir et realistisk prognoseoppsett. Den løser likevel ikke
+  lekkasjen gruppen peker på, fordi seriene ligger i begge settene. Det gjør bare en gruppesplitt.
 
 Rapporten viser at gruppen har forstått strukturen. Den mangler bare å tenke den inn fra starten.
 
 **5. Synet på outliers skifter underveis.** I oppgave 1b og 3a er hovedargumentet at de ekstreme
-verdiene er *ekte* variasjon i landstørrelse og produksjonssystem. I 3b sier gruppen at de
-gjenværende verdiene er «genuinely extreme», og capper dem likevel. I praksis blir særlig små,
-ekte produsenter og de 31 radene med avlingssvikt, som gruppen eksplisitt ville beholde, endret.
-Dette er det eneste stedet der rapportens egen logikk bryter sammen og ikke bare er ufullstendig.
+verdiene er *ekte* variasjon i landstørrelse og produksjonssystem. I 3b capper gruppen de
+gjenværende outlierne uten å forklare hvorfor ekte verdier skal endres. I praksis blir særlig små,
+ekte produsenter endret, og de 31 radene med avlingssvikt, som gruppen eksplisitt begrunnet
+log10(x+1) med å ville beholde, cappes opp fra 0. Dette er den tydeligste av flere interne
+inkonsistenser (se også `Year` i 4b og argumentet mot gruppesplitt i 5a).
 
 ### Ujevn kvalitet: rapporten har flere stemmer
 Innledningen og oppgave 1, 2 og 6 har samme presise og tette stil og er nesten feilfrie. Oppgave 3
 og 4 har en annen stil:
 - De er mer ordrike (4a gjentar det samme poenget flere ganger).
-- Det er påstander uten tall (spennene i 4b).
+- Det er unøyaktige tall (spennene i 4b, der avlingen faktisk går fra 2.59 til 6.71).
 - Det er korrekturfeil («textbfa.», duplisert tabell, norske figuretiketter, figur uten henvisning).
 - Det er inkonsistenser mot resten (`Year` er «discrete codes», 8,436 serier).
 
@@ -839,7 +858,7 @@ seg på 64 og 61 rader, og at grupperingsargumentet bare gjelder 4 serier. En va
 leser rapporten, vil se:
 - en svært grundig og profesjonell rapport (sterkt førsteinntrykk),
 - korrekturfeilene i oppgave 3–4,
-- selvmotsigelsen i begrunnelsen for cappingen,
+- den mangelfulle begrunnelsen for cappingen,
 - at `Year` behandles forskjellig i oppgave 1 og 4,
 - tynne svar i 4b-ii og 5b,
 - og eventuelt ordgrensen.
