@@ -1,0 +1,272 @@
+\documentclass{article}
+\usepackage[margin=3cm]{geometry}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{titlesec}
+\usepackage{float} % For [H] float placement
+\usepackage{booktabs} % For tables (\toprule, \midrule, \bottomrule)
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\title{Assignment 1 - IT3212}
+\author{Group 50 \\ \\ Jesper Hagen, Synne Holmøy, Erlend Skogan, \\ Even Bøifot and Eira Stiksrud Sponheim \\ \\ \\ \\ Word count: 2,963 (text, headings and captions; references excluded)}
+\date{}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+
+\begin{document}
+
+\maketitle
+
+\newpage
+
+\section*{Introduction}
+
+We assessed the 15 candidate datasets against what the tasks require: both numerical and categorical columns, genuine missing values, realistic outliers, a manageable size and self-explanatory columns. We chose the FAOSTAT crop statistics (\texttt{crop1.csv}) over the livestock file (\texttt{live1.csv}), which has only one numerical variable with mixed units, making feature scaling trivial and PCA meaningless.
+
+Throughout the report we prepare the data for one purpose, predicting production from harvested area, country, crop and year. Yield is therefore not part of the feature set, since it is a deterministic function of the other two measurements.
+
+Two properties of the raw file make it unsuitable as it is: the column \texttt{Value} mixes hectares, tonnes and hg/ha, and regional aggregates count countries twice. We therefore pivoted the file from long to wide format, so that each row is one combination of country, crop and year with three numerical columns (\texttt{area\_harvested\_ha}, \texttt{production\_tonnes}, \texttt{yield\_hg\_per\_ha}), and removed 35 regions and country groups, including ``China'', the sum of mainland China, Taiwan, Hong Kong and Macao, which would otherwise dominate outlier detection. We also restricted the data to 2010--2020 rather than to a few main crops, which are the best reported and would have removed most of the missing data. This keeps all 118 crops and 200 countries for the encoding task, avoids most border changes apart from Sudan, which split in 2011 and appears as three categories, and lowers the share of missing values from 15.1\%, 11.0\% and 16.0\% to 7.3\%, 5.9\% and 9.6\% for area, production and yield, since reporting is better in recent years. No step alters a value (Table~\ref{tab:tailoring}), and missing values and outliers were left for Tasks 2 and 3.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lrrr}
+        \toprule
+        Step & Rows & Countries and regions & Crops \\
+        \midrule
+        Original (long format) & 1,895,975 & 245 & 118 \\
+        Pivoted to wide format & 667,046 & 245 & 118 \\
+        Without 35 regions and country groups & 479,231 & 210 & 118 \\
+        Restricted to 2010--2020 & 98,101 & 200 & 118 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Tailoring of \texttt{crop1.csv} before Task 1. No values were altered.}
+    \label{tab:tailoring}
+\end{table}
+
+\section{Data Exploration}
+
+\textbf{a.}
+The dataset has 98,101 rows and six columns, where each row is one country (\texttt{Area}), crop (\texttt{Item}) and year (\texttt{Year}, 2010--2020) with harvested area, production and yield (Table~\ref{tab:first-rows}). \texttt{Area} and \texttt{Item} are text, the measurements are floating-point, and \texttt{Year} is an integer that we treat as numerical, because the years are ordered and equally spaced (Table~\ref{tab:columns}). The three measurements are not independent, since yield is production divided by area, scaled to hg/ha. The dataset therefore holds two independent quantities, which shapes every later step. All measurements are strongly right-skewed: the mean production is more than 50 times the median, and the standard deviation exceeds the mean (Table~\ref{tab:summary}).
+
+\begin{table}[H]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{llrrrr}
+        \toprule
+        Area & Item & Year & area\_harvested\_ha & production\_tonnes & yield\_hg\_per\_ha \\
+        \midrule
+        Afghanistan & Almonds, with shell & 2010 & 11,210 & 56,000 & 49,955 \\
+        Afghanistan & Almonds, with shell & 2011 & 13,469 & 60,611 & 45,000 \\
+        Afghanistan & Almonds, with shell & 2012 & 13,490 & 62,000 & 45,960 \\
+        Afghanistan & Almonds, with shell & 2013 & 14,114 & 42,215 & 29,910 \\
+        Afghanistan & Almonds, with shell & 2014 & 13,703 & 27,400 & 19,996 \\
+        \bottomrule
+    \end{tabular}}
+    \caption{The first five rows.}
+    \label{tab:first-rows}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{llrrr}
+        \toprule
+        Column & Data type & Missing & Missing (\%) & Unique \\
+        \midrule
+        \texttt{Area} & text (str) & 0 & 0.0 & 200 \\
+        \texttt{Item} & text (str) & 0 & 0.0 & 118 \\
+        \texttt{Year} & integer (int64) & 0 & 0.0 & 11 \\
+        \texttt{area\_harvested\_ha} & float (float64) & 7,172 & 7.3 & -- \\
+        \texttt{production\_tonnes} & float (float64) & 5,758 & 5.9 & -- \\
+        \texttt{yield\_hg\_per\_ha} & float (float64) & 9,448 & 9.6 & -- \\
+        \bottomrule
+    \end{tabular}
+    \caption{Data type, missing and unique values per column.}
+    \label{tab:columns}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lrrrrrrrr}
+        \toprule
+        & Count & Mean & Std & Min & 25\% & Median & 75\% & Max \\
+        \midrule
+        \texttt{Year} & 98,101 & 2015 & 3 & 2010 & 2012 & 2015 & 2018 & 2020 \\
+        \texttt{area\_harvested\_ha} & 90,929 & 161,389 & 1,312,123 & 0 & 418 & 3,394 & 24,009 & 45,000,000 \\
+        \texttt{production\_tonnes} & 92,343 & 1,025,476 & 11,853,360 & 0 & 1,825 & 19,067 & 143,400 & 768,594,154 \\
+        \texttt{yield\_hg\_per\_ha} & 88,653 & 133,757 & 602,735 & 0 & 18,586 & 58,692 & 148,797 & 50,847,458 \\
+        \bottomrule
+    \end{tabular}}
+    \caption{Summary statistics for the numerical columns.}
+    \label{tab:summary}
+\end{table}
+
+\textbf{b.}
+\textit{Missing values.} Only the measurements have missing values, 7.3\% for area, 5.9\% for production and 9.6\% for yield (Table~\ref{tab:columns}). In 5,622 rows all three are missing, and there are no duplicates.
+
+\textit{Outliers.} The maximum values lie far above the third quartile, for production 5,360 times Q3 (Figure~\ref{fig:boxplot}). Applied within each crop, the IQR rule flags 13--14\% of the area and production values and 4.5\% of the yields. The largest values are nevertheless real, for example India's rice fields (45 million ha), Brazil's sugar cane (769 million tonnes) and Dutch indoor mushrooms (5,085 tonnes/ha). Many flagged values are therefore genuine variation in country size and production system, not measurement errors. Area and production also contain more than 2,100 zeros each. These zeros are handled in Task 2, where they turn out to mark crops that were not cultivated.
+
+\textit{Categorical columns.} \texttt{Area} has 200 countries and \texttt{Item} 118 crops, but the number of rows per category ranges from 11 (Faroe Islands, tallowtree seed) to 1,298 (China, mainland). 13 crops are catch-all ``nes'' categories (not elsewhere specified, 12,944 rows). The rows also form 9,421 country and crop time series of up to 11 years each, a structure we return to in Tasks 2 and 5. The high number of categories affects the choice of encoding in Task 4.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{fig2_boksplott_log.png}
+    \caption{Box plots on a log scale with whiskers at $1.5 \times$ IQR. Zeros (2,179 in area, 2,132 in production, 30 in yield) cannot be shown on a log scale and are omitted.}
+    \label{fig:boxplot}
+\end{figure}
+
+\section{Data Cleaning}
+
+\textbf{a.}
+Of the 98,101 rows, 9,448 lack at least one value, and yield is missing in every one of them. We examined why before choosing a method, and found five situations (Table~\ref{tab:missing}): 5,622 fully empty rows; 745 rows of mushrooms and truffles, a crop for which 44 of 70 countries never report an area; 2,128 rows where neither area nor production exceeds 0, so yield is undefined rather than missing; 125 rows reporting production on 0 hectares, which is physically impossible; and 1,127 partial gaps (1.3\%), of which 256 are in countries with observed yields for the same crop in other years and 871 are not.
+
+\textbf{b.}
+We deleted the fully empty rows, the not-cultivated rows and the gaps without the country's own data, removed the mushroom crop, and set the area to missing for the hidden missing values. For the 256 gaps where the country has its own data, we imputed the yield with the median of the same country and crop and computed the missing area or production from the identity in Task 1a, flagged by the column \texttt{imputed}. The result is 88,735 rows with 200 countries and 117 crops and no missing values, with outliers kept for Task 3.
+
+\textbf{c.}
+Fully empty rows contain no value to impute from, so filling them would be guesswork. Mushrooms are mainly grown indoors, so ``harvested area'' has little meaning, and the observed yields, 0.6 to 5,085 tonnes/ha, would make any imputed value close to random. Removing the crop also removes the three largest yields (342 times Q3), a consequence and not a reason. A yield of 0 for the not-cultivated rows would look like crop failure, and empty values would cause problems for scaling and PCA. Most hidden missing values have very small production (median 9 tonnes), so the area was probably rounded down or not recorded.
+
+For the partial gaps, we estimated yield because it is independent of country size, whereas area and production vary by orders of magnitude between countries. We used the median rather than the mean because the distributions are right-skewed, with the mean typically 21\% above the median per crop, and because yield varies little within a country over time (coefficient of variation 0.10). Without the country's own data the estimate would have to come from other countries, where yield varies far more (0.71), and the area would in practice be made up, so we deleted those 871 rows (1.0\%), removing 120 of the 8,436 series remaining at that point but no countries or crops. Deriving the missing area or production from the imputed yield keeps these rows consistent with the identity; in 34 of them the derived value is production itself, so the target is estimated rather than observed, which the flag lets us exclude from evaluation. The medians are computed before the data are split into training and test sets (Task 5), which causes a small leakage. We accept it because the leakage is confined to 256 flagged rows (0.3\%), and because imputing separately in each set would leave the two sets with different medians.
+
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabular}{p{2.9cm}p{3.1cm}p{3.5cm}rr}
+        \toprule
+        Step & Cause & Action & Affected & Rows left \\
+        \midrule
+        Starting point & -- & -- & -- & 98,101 \\
+        Fully empty rows & No value to impute from & Deleted & 5,622 & 92,479 \\
+        Mushrooms and truffles & Area has little meaning (indoor) & Crop removed & 745 & 91,734 \\
+        Not cultivated & Yield is undefined & Deleted & 2,128 & 89,606 \\
+        Production on 0 ha & Hidden missing area & Area set to missing & 125 & 89,606 \\
+        Gaps without own country data & Estimate would be very uncertain & Deleted & 871 & 88,735 \\
+        Gaps with own country data & Yield is stable within a country & Yield imputed with country median; area or production derived & 256 & 88,735 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Handling of missing values, step by step.}
+    \label{tab:missing}
+\end{table}
+
+\section{Handling Outliers}
+
+\textbf{a.}
+Because the three measurements span very different scales across crops, outliers are detected within each crop (\texttt{Item}) rather than on the column as a whole, otherwise sugar cane would be compared with vanilla. Three methods are compared (Table~\ref{tab:outlier-methods}). The raw IQR rule ($1.5\times$IQR per crop) flags the 13--14\% and 4.5\% already reported in Task 1b. As noted there, most of these are genuine: with mushrooms removed (Task 2), the highest yield is now Dutch greenhouse cucumbers (743 tonnes/ha), a real but different (greenhouse) production system. An ordinary z-score (raw scale, per crop) flags fewer values (1.5--2.2\%) but assumes an approximately symmetric distribution, which these right-skewed measurements do not have. IQR computed on $\log_{10}(x+1)$ flags fewer still (1.3\% for area and production, 2.9\% for yield). That a log transform alone removes most of what the raw IQR rule flags shows that the bulk of it reflects the shape of the distribution, not data errors.
+
+\textbf{b.}
+We transform area, production and yield with $\log_{10}(x+1)$ rather than removing or capping on the raw scale. The comparison above is the justification: since the transform alone cuts the flagged share from 13--14\% to 1.3--2.9\%, correcting the distribution is more accurate than deleting or capping a tenth of the data, most of which is genuine variation (Task 1b). We use $\log_{10}(x+1)$ rather than $\log_{10}(x)$ because 31 rows have production and yield equal to 0, genuine crop failure for which $\log_{10}(0)$ is undefined, while the log1p variant keeps them without distorting the rest. Dropping them was rejected because crop failure is a real event, not an error, and they fall in 17 of the 8,316 series.
+
+The outliers that remain (1.3--2.9\%, by IQR on $\log_{10}$) are extreme relative to their own crop even after the skew is corrected, so capping them changes the fewest values for the largest effect. These are winsorised to the $1.5\times$IQR boundary per crop on the log scale (Figure~\ref{fig:outliers}). This affects 3,986 of 88,735 rows and changes no row, country or crop, unlike Task 2, where deletion was the only option. The \texttt{*\_log10} columns are log-transformed and capped, ready for scaling in Task 4, and \texttt{*\_capped} flags the capped cells, the same pattern as \texttt{imputed} in Task 2.
+
+Three consequences follow. The bounds are computed on the full dataset, so capping leaks in the same limited sense as the imputation in Task 2. Capping each column separately breaks the identity from Task 1a, which is why PC3 in Task 6 is not exactly zero. The lower bound also lifts the 31 crop failure rows off zero and caps 2,575 cells of the target column, which we accept because the flags make both changes reversible.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lrrr}
+        \toprule
+        Column & IQR (raw), \% & IQR ($\log_{10}$), \% & z-score (raw), \% \\
+        \midrule
+        \texttt{area\_harvested\_ha} & 13.1 & 1.3 & 2.2 \\
+        \texttt{production\_tonnes} & 13.9 & 1.3 & 2.1 \\
+        \texttt{yield\_hg\_per\_ha} & 4.5 & 2.9 & 1.5 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Share of values flagged per crop, three detection methods.}
+    \label{tab:outlier-methods}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{fig3_outliers.png}
+    \caption{Box plots of $\log_{10}(x+1)$, before and after capping the remaining outliers, one panel per measurement.}
+    \label{fig:outliers}
+\end{figure}
+
+\section{Data Transformation}
+
+\textbf{a.}
+The only categorical columns are \texttt{Area} (200 countries) and \texttt{Item} (117 crops); \texttt{Year} is already numeric (Task 1a), and \texttt{imputed} and the \texttt{*\_capped} flags from Tasks 2--3 are boolean indicators, not categories, so neither is encoded here. We use one-hot encoding: each unique value of \texttt{Area} and \texttt{Item} gets its own binary (0/1) column, e.g.\ \texttt{Area\_Afghanistan}, \ldots, \texttt{Item\_Almonds, with shell}, \ldots. This adds 317 columns, 200 for \texttt{Area} and 117 for \texttt{Item}.
+
+Both columns are nominal categories with no natural ordering, one country or crop is not ``more'' or ``less'' than another, and one-hot encoding is the appropriate choice for exactly that reason. Label encoding (Afghanistan~=~0, Albania~=~1, \ldots) would have implied a rank and a distance that do not exist, and would be particularly damaging for a variance-based method such as PCA, which reads any numeric spread as structure. Task 6 tests this directly: the one-hot columns carry almost no variance, the opposite of what a label-encoded column would have shown.
+
+With 88,735 rows, 317 binary columns is a manageable ratio of rows to features, and a high column count would matter mainly for distance-based methods such as k-nearest neighbours, which we do not use.
+
+\textbf{b.}
+Task 3 corrected the strong right-skew (Task 1b) with $\log_{10}(x+1)$ and capping, but the three log-scaled measurements still span different ranges (roughly 0 to 7.7 for area, 0 to 8.9 for production and 2.6 to 6.7 for yield), and distance- or gradient-based models are sensitive to such differences in scale.
+
+We use standardisation ($x' = (x-\bar{x})/s$) rather than min-max normalisation. Because Task 3 already pulled in the outliers, the mean and standard deviation are more meaningful measures of spread than the min and max, which would still be anchored to each column's two endpoints and would compress the rest of the data near the middle of $[0,1]$.
+
+The scaling parameters are computed from the training set of Task 5 only (Table~\ref{tab:scaling}) and are then applied to both sets, so the dataset is split before it is scaled, not after. Fitting on the full dataset, or fitting a separate scaler per set, would let the test distribution shape how the training data is represented and give an artificially optimistic picture of generalisation. The training set therefore has mean 0 and standard deviation 1 by construction, while the test set lands close to but not exactly at 0/1 ($-0.005/0.990$ for area), a check that the procedure was done correctly. The one-hot columns, \texttt{Year}, \texttt{imputed} and the \texttt{*\_capped} flags are not scaled, since the one-hot columns and the flags are binary and \texttt{Year} is an ordered count on its own natural scale (Task 1a). Production is standardised with the other two measurements because Task 6 needs all three on a common scale, and a model would be fitted on the standardised features with its predictions transformed back.
+
+Scaling changes no information in the data, only its representation, but it changes how a model uses it. A linear model fitted on unscaled columns gives coefficients in units that cannot be compared, and gradient descent converges slowly when one column is orders of magnitude wider than another. With standardised inputs the coefficients are comparable in standard deviations, regularisation penalises every column equally, and PCA in Task 6 finds the directions of largest variance rather than the column with the largest unit.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lrr}
+        \toprule
+        Column & Mean & Std. dev. \\
+        \midrule
+        \texttt{area\_harvested\_ha\_log10} & 3.567 & 1.246 \\
+        \texttt{production\_tonnes\_log10} & 4.283 & 1.310 \\
+        \texttt{yield\_hg\_per\_ha\_log10} & 4.722 & 0.585 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Standardisation parameters for the log-scaled measurements, computed on the training set only.}
+    \label{tab:scaling}
+\end{table}
+
+\section{Data Splitting}
+
+\textbf{a.}
+The dataset is split after encoding (Task 4a) and before scaling (Task 4b), so that every parameter fitted later sees the training set only. We chose an 80-20 split, one of the two ratios the assignment names, since 88,735 rows leave enough data in both sets even with the larger training share.
+
+The dataset consists of the 8,316 country and crop series left after cleaning, typically spanning 11 years, and yield varies little within a series (coefficient of variation 0.10, Task 2c). A random row split therefore places near-identical rows from the same series in both sets, which gives an optimistic performance estimate and compounds the leakage from median imputation noted in Task 2. A grouped split would avoid this, but three countries and one crop occur in a single series each, so four series would have to be pinned to the training set for the encoding in Task 4a to cover every category. We keep the random split as the convention the assignment names and report the series leakage as a limitation, while noting that the grouped split is the stronger design.
+
+\textbf{b.}
+Splitting the data lets the model be evaluated on rows it has not seen during training, and a large gap between training and test performance signals overfitting, where the model has learned patterns specific to the training rows. The split does not prevent overfitting by itself, it makes it visible, and that is what lets us act on it. Because the test set is untouched during fitting, the gap is an honest signal, and it is the signal that drives model choice, early stopping and regularisation strength. A model tuned directly on the test set would lose it, which is why a validation split or cross-validation inside the training set is the usual next step.
+
+\section{Bonus task}
+
+\textit{Method.} We use PCA rather than LDA because the dataset has no classes and LDA requires class labels. PCA is unsupervised, finds the directions of largest variance and is linear, so we use the log-transformed, standardised measurements from Tasks 3 and 4b, where the identity from Task 1a becomes the approximately linear relationship $\log(\mathit{yield}) \approx \log(\mathit{production}) - \log(\mathit{area}) + 4$. The main run covers all three measurements, and not only the feature set from the introduction, because its purpose is to quantify their redundancy rather than to build features; the one-hot columns (Task 4a) are tested separately below. The data were centred in Task 4b, and PCA is fitted on the training set and applied unchanged to the test set, as with the scaling.
+
+\textit{Results.} Area and production are strongly correlated ($r = 0.89$). The first two components explain 99.95\% of the variance (Table~\ref{tab:pca}), so we keep two components under a 95\% threshold, and the Kaiser criterion (eigenvalue $> 1$) gives the same. PC1 weights area and production and describes the scale of cultivation, while PC2 is dominated by yield and describes productivity (Figure~\ref{fig:pca}). PC3 is the combination production $-$ area $-$ yield, i.e.\ the relationship between the measurements itself, and has almost no variance. It is not exactly zero, for the reason given in Task 3b.
+
+\textit{The one-hot columns.} The dataset has 328 columns after Task 4a, so we also tested including the 317 one-hot columns. They do not compress: 213 of 320 components are needed to reach 95\%, against two of three without them, because each column has a variance of only 0.006 and the columns within \texttt{Area} and \texttt{Item} are mutually exclusive. PC1 and PC2 barely change, keeping 99.8\% and 99.2\% of their weight on the measurements, so we run PCA on the measurements alone.
+
+\textit{Effect on the dataset.} The dataset goes from three to two uncorrelated columns, and reconstructing the measurements from them loses only 0.05\% of the variance on the training set and 0.06\% on the test set, so the projection holds on unseen data. The gain is nevertheless small: dropping yield, which can almost be computed from the other two ($R^2 = 0.98$), loses 0.5--0.6\% and keeps columns that are easy to interpret. PCA thus confirms on the data what Task 1a stated from the definition, that the three measurements carry two independent quantities, and it supports leaving yield out of the feature set.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lrrrrrr}
+        \toprule
+        Component & Eigenvalue & Explained (\%) & Cumulative (\%) & Area & Production & Yield \\
+        \midrule
+        PC1 & 1.914 & 63.79 & 63.79 & 0.680 & 0.718 & 0.150 \\
+        PC2 & 1.085 & 36.16 & 99.95 & $-0.325$ & 0.112 & 0.939 \\
+        PC3 & 0.001 & 0.05 & 100.00 & $-0.657$ & 0.687 & $-0.309$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Eigenvalues, explained variance and eigenvectors (fitted on the training set).}
+    \label{tab:pca}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{fig4_pca.png}
+    \caption{Explained variance per component with cumulative share and the 95\% threshold (left), and PC1 against PC2 for 5,000 random training rows, with the eigenvectors of the three measurements as arrows (right).}
+    \label{fig:pca}
+\end{figure}
+
+\begin{thebibliography}{9}
+\bibitem{faostat} FAO. \textit{FAOSTAT Crops and livestock products}, \texttt{crop1.csv}, provided on Blackboard.
+\bibitem{lectures} IT3212 lecture notes, \textit{Data Preprocessing} and \textit{Pipelines}, NTNU, autumn 2025.
+\end{thebibliography}
+
+\end{document}

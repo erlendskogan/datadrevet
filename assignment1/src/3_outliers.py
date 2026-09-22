@@ -112,7 +112,7 @@ clean_raw = read(CLEAN)
 for ax, c in zip(axes, NUM):
     before = np.log10(clean_raw[c] + 1)
     after = df[LOG[c]]
-    ax.boxplot([before, after], widths=0.5, patch_artist=True, tick_labels=["før", "etter"],
+    ax.boxplot([before, after], widths=0.5, patch_artist=True, tick_labels=["before", "after"],
                boxprops=dict(facecolor="#cde2fb", edgecolor=BLUE, linewidth=1.2),
                medianprops=dict(color=BLUE, linewidth=2), whiskerprops=dict(color=BLUE),
                capprops=dict(color=BLUE),

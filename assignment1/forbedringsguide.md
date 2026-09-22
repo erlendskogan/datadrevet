@@ -1,5 +1,9 @@
 # Fra dagens rapport til en A
 
+> **Status: gjennomført.** Del 1 til 10 er implementert i `rapport/main.tex` og i Overleaf-prosjektet,
+> og de norske arbeidsversjonene i `rapport/` er oppdatert tilsvarende. Guiden står igjen som
+> dokumentasjon av hva som ble endret og hvorfor.
+
 Guide til gruppe 50 for å gjøre rapporten helhetlig. Den bygger på `sensorvurdering.md`, men
 er skrevet som en arbeidsliste, ikke som en vurdering. Alt som står her gjelder **innholdet i
 rapporten**, ikke koden.

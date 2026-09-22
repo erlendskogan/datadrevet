@@ -1,8 +1,29 @@
 # Valg og tilpasning av datasett
 
-> Norsk arbeidsversjon – den engelske teksten står i Overleaf-rapporten. Kode: `src/0_tilpass_datasett.py`. Ca. 380 ord inkl. tabelltekst (engelsk versjon).
+> Norsk arbeidsversjon. Den innleverte engelske teksten står i [`main.tex`](main.tex) (Introduction).
+> Kode: `src/0_tilpass_datasett.py`.
 
-Før vi valgte data, leste vi gjennom alle deloppgavene og vurderte de 15 kandidatdatasettene opp mot det oppgavene krever: både numeriske og kategoriske kolonner, ekte manglende verdier, realistiske uteliggere, håndterbar størrelse og selvforklarende kolonner. Bilde-, tekst- og rå sensordatasett ble utelukket med en gang. Vi valgte FAOSTATs avlingsstatistikk (`crop1.csv`) fremfor husdyrfilen (`live1.csv`), som bare har én numerisk variabel med blandede enheter og dermed gjør skalering triviell og PCA meningsløs. To egenskaper ved råfilen gjør den uegnet som den er: kolonnen `Value` blander hektar, tonn og hg/ha, og regioner og landgrupper teller land dobbelt. Vi rettet begge, og valgte i tillegg å avgrense perioden for å få et mindre og mer konsistent datasett. Ingen av stegene endrer verdier (Tabell 1), og manglende verdier og outliers er med vilje latt være til oppgave 2 og 3. Først pivoterte vi filen fra langt til bredt format, slik at hver rad er én kombinasjon av land, vekst og år med tre numeriske kolonner (`area_harvested_ha`, `production_tonnes`, `yield_hg_per_ha`). Deretter fjernet vi 35 regioner og landgrupper, blant annet «China», som er summen av fastlands-Kina, Taiwan, Hongkong og Macao. Disse radene teller land dobbelt og ville dominert outlier-deteksjonen (verdens hveteproduksjon i 2019 var 7,65·10⁸ tonn, mot 1,34·10⁸ tonn for det største landet). Til slutt avgrenset vi til 2010–2020 i stedet for til noen få hovedvekster. Hovedvekstene er de best rapporterte (1,0 % manglende produksjon for hvete, mot en median på 12,6 % for alle vekster i 1961–2020), så å velge dem ville fjernet det meste av de manglende dataene. Avgrensning på år beholder alle 118 vekster og 200 land til encoding-oppgaven og unngår de fleste grenseendringer: ti land og områder, blant annet USSR og Jugoslavia, finnes bare før 2010, og 32 land kommer først inn senere. Unntaket er Sudan, som ble delt i 2011: «Sudan (former)» dekker 2010–2011 og «Sudan» og «South Sudan» 2012–2020. Det gir et brudd i disse tidsseriene, men ingen dobbelttelling. Avgrensningen reduserer også andelen manglende verdier, fordi rapporteringen er bedre i nyere år: fra 15,1 %, 11,0 % og 16,0 % til 7,3 %, 5,9 % og 9,6 % i henholdsvis areal, produksjon og avling.
+Vi vurderte de 15 kandidatdatasettene opp mot det oppgavene krever: både numeriske og kategoriske
+kolonner, ekte manglende verdier, realistiske uteliggere, håndterbar størrelse og selvforklarende
+kolonner. Vi valgte FAOSTATs avlingsstatistikk (`crop1.csv`) fremfor husdyrfilen (`live1.csv`), som
+bare har én numerisk variabel med blandede enheter og dermed gjør skalering triviell og PCA meningsløs.
+
+**Formålet, som styrer hele rapporten:** vi forbereder dataene for å predikere *produksjon* fra
+høstet areal, land, vekst og år. Avling er derfor ikke en feature, fordi den er en deterministisk
+funksjon av de to andre målingene. Dette valget er det som binder oppgave 1 til 6 sammen, se
+`../forbedringsguide.md` (G1).
+
+To egenskaper ved råfilen gjør den uegnet som den er: kolonnen `Value` blander hektar, tonn og hg/ha,
+og regioner og landgrupper teller land dobbelt. Vi pivoterte derfor filen fra langt til bredt format,
+slik at hver rad er én kombinasjon av land, vekst og år med tre numeriske kolonner, og fjernet 35
+regioner og landgrupper, blant annet «China», som er summen av fastlands-Kina, Taiwan, Hongkong og
+Macao, og som ellers ville dominert outlier-deteksjonen. Vi avgrenset også til 2010–2020 i stedet for
+til noen få hovedvekster, som er de best rapporterte og ville fjernet det meste av de manglende
+dataene. Avgrensningen beholder alle 118 vekster og 200 land til encoding-oppgaven, unngår de fleste
+grenseendringer bortsett fra Sudan, som ble delt i 2011 og opptrer som tre kategorier, og reduserer
+andelen manglende verdier fra 15,1 %, 11,0 % og 16,0 % til 7,3 %, 5,9 % og 9,6 %, fordi rapporteringen
+er bedre i nyere år. Ingen steg endrer en verdi (Tabell 1), og manglende verdier og outliers er latt
+til oppgave 2 og 3.
 
 **Tabell 1: Tilpasning av `crop1.csv` før oppgave 1. Ingen verdier er endret.**
 

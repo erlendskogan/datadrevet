@@ -8,8 +8,9 @@ mening enn min/maks, som fortsatt ville vært styrt av de ytterpunktene
 
 Det er *_log10-kolonnene fra oppgave 3 som skaleres (area_harvested_ha_log10,
 production_tonnes_log10, yield_hg_per_ha_log10) - det er disse som faktisk
-skal brukes videre, ikke de rå målingene. Area/Item (heltallskoder fra
-oppgave 4a), Year, imputed og *_capped skaleres ikke.
+skal brukes videre, ikke de rå målingene. One-hot-kolonnene for Area/Item
+(oppgave 4a), Year, imputed og *_capped skaleres ikke: one-hot-kolonnene og
+flaggene er binære, og Year er en ordnet telling på sin egen skala (oppgave 1a).
 
 Kjøres ETTER splitting (oppgave 5), ikke før, for å unngå datalekkasje:
 StandardScaler fittes KUN på treningssettet (fit_transform), og de samme

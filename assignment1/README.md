@@ -5,18 +5,27 @@ Oppgaveteksten ligger i [`oppgavetekst.pdf`](oppgavetekst.pdf).
 
 ## Status
 
-| Del | Status | Rapporttekst | Kode |
-|---|---|---|---|
-| Valg og tilpasning av datasett | ✅ Ferdig | [`rapport/0-datasett.md`](rapport/0-datasett.md) | [`src/0_tilpass_datasett.py`](src/0_tilpass_datasett.py) |
-| 1 Datautforskning | ✅ Ferdig | [`rapport/1-datautforskning.md`](rapport/1-datautforskning.md) | [`src/1_datautforskning.py`](src/1_datautforskning.py) |
-| 2 Manglende verdier | ✅ Ferdig | [`rapport/2-manglende-verdier.md`](rapport/2-manglende-verdier.md) | [`src/2_manglende_verdier.py`](src/2_manglende_verdier.py) |
-| 3 Outliers | ⏳ Gjenstår | – | – |
-| 4 Encoding og skalering | ⏳ Gjenstår | – | – |
-| 5 Splitting | ⏳ Gjenstår | – | – |
-| 6 PCA (bonus) | ⏳ Gjenstår | – | – |
+Alle deler er ferdige. Den innleverte rapporten er [`rapport/main.tex`](rapport/main.tex),
+som er den samme filen som ligger i Overleaf-prosjektet.
 
-**Skal du gjøre oppgave 3–6? Les [`notater-oppgave3-6.md`](notater-oppgave3-6.md) først.**
-Viktigst: gruppen må bestemme målvariabel før oppgave 3, fordi avling = produksjon × 10 000 / areal.
+| Del | Status | Norsk arbeidsversjon | Kode |
+|---|---|---|---|
+| Valg og tilpasning av datasett | ✅ | [`rapport/0-datasett.md`](rapport/0-datasett.md) | [`src/0_tilpass_datasett.py`](src/0_tilpass_datasett.py) |
+| 1 Datautforskning | ✅ | [`rapport/1-datautforskning.md`](rapport/1-datautforskning.md) | [`src/1_datautforskning.py`](src/1_datautforskning.py) |
+| 2 Manglende verdier | ✅ | [`rapport/2-manglende-verdier.md`](rapport/2-manglende-verdier.md) | [`src/2_manglende_verdier.py`](src/2_manglende_verdier.py) |
+| 3 Outliers | ✅ | [`rapport/3-outliers.md`](rapport/3-outliers.md) | [`src/3_outliers.py`](src/3_outliers.py) |
+| 4 Encoding og skalering | ✅ | [`rapport/4-transformation.md`](rapport/4-transformation.md) | [`src/4_encoding.py`](src/4_encoding.py), [`src/4b_scaling.py`](src/4b_scaling.py) |
+| 5 Splitting | ✅ | [`rapport/5-data-splitting.md`](rapport/5-data-splitting.md) | [`src/5_data_splitting.py`](src/5_data_splitting.py) |
+| 6 PCA (bonus) | ✅ | [`rapport/6-pca.md`](rapport/6-pca.md) | [`src/6_pca.py`](src/6_pca.py) |
+
+**Målvariabel:** produksjon, predikert fra areal, land, vekst og år. Avling er holdt utenfor
+featurene fordi avling = produksjon × 10 000 / areal. Dette valget står i innledningen i rapporten og
+styrer begrunnelsene i oppgave 2, 3, 4b, 5 og 6.
+
+**Vurdering og videre arbeid:** [`sensorvurdering.md`](sensorvurdering.md) er en gjennomgang av
+besvarelsen mot oppgaveteksten, og [`forbedringsguide.md`](forbedringsguide.md) er arbeidslisten som
+ble brukt til å rette rapporten. Notatene i [`notater-oppgave3-6.md`](notater-oppgave3-6.md) er
+historiske, fra før oppgave 3–6 ble skrevet.
 
 ## Mappestruktur
 
@@ -24,17 +33,23 @@ Viktigst: gruppen må bestemme målvariabel før oppgave 3, fordi avling = produ
 assignment1/
 ├── README.md                 ← denne filen
 ├── oppgavetekst.pdf
-├── notater-oppgave3-6.md     ← råd og ferdig utregnede tall til resten av oppgavene
-├── rapport/                  ← norsk arbeidsversjon av rapportteksten (se «Rapporten» under)
-│   ├── 0-datasett.md
-│   ├── 1-datautforskning.md
-│   ├── 2-manglende-verdier.md
-│   └── figurer/              ← lages av src/1_datautforskning.py
+├── sensorvurdering.md        ← vurdering av besvarelsen mot oppgaveteksten
+├── forbedringsguide.md       ← arbeidslisten som ble brukt til å rette rapporten
+├── notater-oppgave3-6.md     ← historiske notater fra før oppgave 3–6 ble skrevet
+├── rapport/
+│   ├── main.tex              ← den innleverte rapporten, identisk med Overleaf
+│   ├── 0-datasett.md … 6-pca.md   ← norsk arbeidsversjon per oppgave
+│   └── figurer/              ← lages av 1_datautforskning.py, 3_outliers.py og 6_pca.py
 └── src/                      ← ett skript per oppgave, kjøres i nummerrekkefølge
     ├── felles.py             ← stier og kolonnenavn, importeres av alle skriptene
     ├── 0_tilpass_datasett.py
     ├── 1_datautforskning.py
-    └── 2_manglende_verdier.py
+    ├── 2_manglende_verdier.py
+    ├── 3_outliers.py
+    ├── 4_encoding.py
+    ├── 4b_scaling.py         ← kjøres etter 5_data_splitting.py
+    ├── 5_data_splitting.py
+    └── 6_pca.py
 ```
 
 ## Dataflyt
@@ -65,6 +80,11 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt   # første ga
 .venv/bin/python assignment1/src/0_tilpass_datasett.py
 .venv/bin/python assignment1/src/1_datautforskning.py
 .venv/bin/python assignment1/src/2_manglende_verdier.py
+.venv/bin/python assignment1/src/3_outliers.py
+.venv/bin/python assignment1/src/4_encoding.py
+.venv/bin/python assignment1/src/5_data_splitting.py
+.venv/bin/python assignment1/src/4b_scaling.py   # etter splitting, for å unngå lekkasje
+.venv/bin/python assignment1/src/6_pca.py
 ```
 
 Skriptene sjekker seg selv underveis (blant annet at ingen verdier går tapt i pivoteringen og at
@@ -73,29 +93,33 @@ Alle tall i rapporttekstene kommer fra utskriften til skriptene.
 
 ## Rapporten
 
-Den innleverte rapporten skrives i **Overleaf, på engelsk**. Introduction (valg av datasett),
-oppgave 1 og oppgave 2 er lagt inn der, med LaTeX-tabeller (booktabs) og figurene fra `rapport/figurer/`
-(last dem opp i Overleaf-prosjektet). Filene i `rapport/` er den norske arbeidsversjonen av de samme tekstene.
+Den innleverte rapporten skrives i **Overleaf, på engelsk**, og kilden ligger i
+[`rapport/main.tex`](rapport/main.tex). Filen i repoet og filen i Overleaf skal være identiske,
+så endrer du én av dem, last den opp eller kopier den over til den andre. Figurene i
+`rapport/figurer/` lastes opp i Overleaf-prosjektet. Filene `0-datasett.md` til `6-pca.md` er den
+norske arbeidsversjonen av de samme tekstene.
 
-## Når dere legger til oppgave 3–6
+## Regler for rapporten
 
-- Nytt skript: `src/3_outliers.py` osv. Start med `from felles import CLEAN, NUM, A, P, Y, read` og `df = read(CLEAN)`.
-- Rapporttekst skrives rett i Overleaf (engelsk). Notater kan eventuelt legges i `rapport/3-outliers.md` osv.
-- Nummerering: LaTeX nummererer selv – bruk `\label`/`\ref`. Table 1–5 og Figure 1–2 er brukt.
-- Tallformat i rapporten: engelsk, med komma som tusenskille og desimalpunktum (98,101 og 7.3%).
-- Figurer med engelske etiketter, i samme stil som `1_datautforskning.py`.
+- Nummerering: LaTeX nummererer selv, bruk `\label` og `\ref`. Rapporten har Table 1–7 og Figure 1–3.
+- Tallformat: engelsk, med komma som tusenskille og desimalpunktum (98,101 og 7.3%).
+- Figurer skal ha **engelske** etiketter, i samme stil som `1_datautforskning.py`.
+- Alle tabeller og figurer skal være henvist til i teksten.
+- Britisk rettskriving i hele rapporten (standardisation, winsorised, artefact, centred).
 
 ## Ordbudsjett (grense 3 000 ord)
 
-Talt på den engelske teksten i Overleaf:
+Oppgaveteksten sier at tabell- og figurtekster teller, men at kode og referanser ikke gjør det.
+Målt med Overleafs egen teller (texcount) på `main.tex`:
 
-| Del | Ord (inkl. tabell- og figurtekster) |
+| Post | Ord |
 |---|---|
-| Introduction (datasett) | ca. 380 |
-| Oppgave 1 | ca. 345 |
-| Oppgave 2 | ca. 560 |
-| **Brukt** | **ca. 1 290** |
-| **Igjen til oppgave 3–6** | **ca. 1 710** |
+| Brødtekst | 2 826 |
+| Bildetekster (11 stykker) | 144 |
+| Seksjonsoverskrifter | 16 |
+| **Sum** | **2 986** |
+| Minus referanselisten, som ikke teller | −23 |
+| **Oppgitt på forsiden** | **2 963** |
 
-Selve tabellinnholdet utgjør ca. 320 ord til. Oppgaveteksten sier at tabell- og figurtekster teller,
-men ikke om tabellinnholdet gjør det – det bør avklares med faglærer.
+Tallet hentes med `GET /project/<id>/wordcount?file=main.tex` i Overleaf, eller fra menyen.
+Legger du til tekst, må du hente ut like mye et annet sted.
