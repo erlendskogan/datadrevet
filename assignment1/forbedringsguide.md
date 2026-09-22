@@ -177,9 +177,6 @@ enn gjentakelsene i 4a.
 Dagens formulering begrunner cappingen med at verdiene er ekte, som er det samme argumentet 1b og
 3a bruker mot capping.
 
-### 4b-ii, erstatt «roughly 0--7 for area, 0--9 for production, 0--7 for yield»
-
-> roughly 0 to 7.7 for area, 0 to 8.9 for production and 2.6 to 6.7 for yield (18 ord, erstatter 13)
 
 ### 4b, erstatt «since they are binary indicators or discrete codes, not continuous measurements»
 
@@ -358,3 +355,198 @@ det oppgaven krever.
   det, er det enkeltgrepet som skiller besvarelsen mest fra en gjennomsnittlig besvarelse.
 - **Ærligheten.** Lekkasje, serielekkasje og den lille gevinsten av PCA er alle innrømmet. Behold
   det, og bygg heller ut begrunnelsene, som beskrevet i G3.
+
+---
+
+## Del 8, ringvirkninger, lukk disse samtidig
+
+Endringene i del 1 og 2 er ikke lokale. Ti steder i rapporten blir uriktige, ufullstendige eller
+dobbelte når de andre stedene endres. Denne delen er skrevet etter en gjennomlesning av rapporten
+slik den blir *etter* at del 1 til 5 er implementert.
+
+| Nr | Endringen i | Krever justering i | Alvorlighet |
+|---|---|---|---|
+| R1 | G1, produksjon blir mål | 4b og 6, målkolonnen skaleres og går inn i PCA | Høy |
+| R2 | Kuttlisten, 1b mister setningen om ekte variasjon | 3a, «As noted there» mister det den viser til | Høy |
+| R3 | 4a argumenterer mot label encoding med PCA | 6, som kjører PCA uten one-hot-kolonnene | Høy |
+| R4 | G1, målet er utledet i 34 rader | 2c, snutten i del 2 mangler dette | Middels |
+| R5 | 1b får antall tidsserier | 2c og 5a, tre ulike tall uten forklaring for leseren | Middels |
+| R6 | 5a tallfester motargumentet | 5a selv, konklusjonen står igjen uferdig | Middels |
+| R7 | 3b får avsnittet om konsekvenser | 3b selv, log1p-begrunnelsen motsier den | Middels |
+| R8 | 3b forklarer hvorfor PC3 ikke er null | 6, som forklarer det samme | Lav, men koster ord |
+| R9 | Kuttlisten, innledningen mister Sudan | Innledningen, «avoids most border changes» står uten unntak | Lav |
+| R10 | Kuttlisten, 2c mister soppdetaljen | 3a, agurksetningen mister forutsetningen | Lav |
+
+### R1, målvariabelen møter oppgave 4b og 6
+
+Når innledningen sier at produksjon er målet og avling er ute av featurene, blir to setninger senere
+i rapporten påfallende. 4b standardiserer alle tre målingene, altså også målkolonnen, og 6 kjører
+PCA på de samme tre, altså på målet, én feature og én kolonne som ikke er en feature i det hele tatt.
+Ingen av delene er galt, men begge må sies, ellers ser det ut som om gruppen glemte sitt eget valg
+mellom oppgave 1 og oppgave 6.
+
+**4b, legg til etter setningen om hvilke kolonner som ikke skaleres.**
+
+> Production is standardised together with the other two measurements because Task 6 needs all three
+> on a common scale. A model would be fitted on the standardised features and the original target,
+> or on a standardised target whose predictions are transformed back. (44 ord)
+
+**6, legg til i metodeavsnittet, rett etter «Only the three measurements are included in the main run».**
+
+> The run covers all three measurements, and not only the feature set from the introduction, because
+> its purpose is to quantify the redundancy between them rather than to build features for the
+> model. (35 ord)
+
+### R2, 1b-setningen er bærende og skal ikke kuttes
+
+Kuttlisten i del 3 foreslår å fjerne «Many flagged values are therefore likely genuine variation in
+country size and production system rather than measurement errors» fra 1b. Den setningen er
+antecedenten til 3a sin «As noted there, most of these are genuine». Kuttes den, peker 3a på
+ingenting, og hele outlier-argumentet mister utgangspunktet sitt.
+
+**Rettelse i kuttlisten.** Behold setningen i 1b. Ta de 25 ordene fra 4a i stedet, der det er
+rikelig igjen.
+
+### R3, 4a sitt sterkeste argument gjelder en PCA som ikke kjøres
+
+4a begrunner one-hot med at label encoding ville vært «particularly damaging for Task 6 (PCA)».
+Oppgave 6 konkluderer deretter med at one-hot-kolonnene ikke lar seg komprimere, og at PCA kjøres
+på målingene alene. En sensor som leser dette etter hverandre, ser at det avgjørende argumentet i
+4a gjelder kolonner som til slutt ikke er med i PCA-en. Slik rapporten står i dag, ligger de to
+påstandene ti sider fra hverandre og kolliderer ikke. Etter at resten av rapporten er strammet,
+vil de gjøre det.
+
+**4a, erstatt «and is particularly damaging for Task 6 (PCA)» og resten av den setningen.**
+
+> and would be particularly damaging for a variance based method such as PCA, which reads any
+> numeric spread as structure. Task 6 tests this directly, the one hot columns turn out to carry
+> almost no variance, which is the expected result and the opposite of what a label encoded column
+> would have shown. (54 ord, erstatter 39)
+
+Dette gjør 4a og 6 til en påstand og en kontroll i stedet for to påstander som trekker i hver sin
+retning, og det er nettopp den typen sammenheng en A krever.
+
+### R4, snutten til 2c mangler det G1 ber om
+
+G1 sier at 2c skal nevne at de imputerte radene inneholder enten et utledet mål eller en utledet
+feature. Snutten i del 2 dekker bare lekkasjen fra medianene. Legg til én bisetning.
+
+> In 34 of these rows the derived value is production itself, so the target is estimated and not
+> observed, and the flag lets us exclude them from evaluation. (28 ord)
+
+### R5, tre ulike serietall må forklares i rapporten, ikke bare i denne guiden
+
+Etter endringene står 9 421 i 1b, 8 436 i 2c og 8 316 i 5a. Alle tre er riktige, men leseren ser
+tre tall og ingen forklaring. Legg inn kvalifikatoren i hvert tall i stedet for en egen setning.
+
+- 1b, «9,421 country and crop time series»
+- 2c, «120 of the 8,436 series remaining at that point»
+- 5a, «the 8,316 series left after cleaning»
+
+Tolv ord til sammen, og de fjerner en av de mest synlige interne motsetningene.
+
+### R6, 5a står igjen uten konklusjon
+
+Når 5a sier at bare fire serier er i veien for en gruppesplitt, spør leseren umiddelbart hvorfor
+gruppen ikke gjorde det. Snutten i del 2 svarer ikke, den bare tallfester. Avslutt argumentet.
+
+> We keep the random split because the 80-20 row split is the convention the assignment names, and
+> we report the series leakage as a limitation. A grouped split with those four series pinned to the
+> training set is the stronger design, and it is the first change we would make with more time.
+> (56 ord)
+
+Å si dette rett ut er bedre enn å la motargumentet stå halvferdig. En sensor belønner at gruppen ser
+sin egen begrensning, og straffer at den skjules bak et argument som ikke holder.
+
+### R7, 3b motsier seg selv innenfor ett avsnitt
+
+Dagens 3b begrunner log10(x+1) med at de 31 radene med avlingssvikt havner på 0. Det nye avsnittet
+fra del 2 sier at cappingen løfter dem av 0. Begge er riktige, men de står fire setninger fra
+hverandre, og sammen leser de som en selvmotsigelse.
+
+**Erstatt «while the log1p variant maps these rows to 0 without noticeably distorting the rest».**
+
+> while the log1p variant keeps these rows in the dataset without noticeably distorting the rest
+> (16 ord, erstatter 17)
+
+Da er begrunnelsen at radene beholdes, ikke at de havner på en bestemt verdi, og avsnittet henger
+sammen med cappingen som følger.
+
+### R8, PC3 forklares nå to steder
+
+Det nye avsnittet i 3b sier hvorfor PC3 ikke er null. Oppgave 6 sier det samme. Behold forklaringen
+i 3b, der årsaken oppstår, og kort 6 til en henvisning.
+
+**6, erstatt «It is not exactly zero because $\log_{10}(x+1)$ and the per-column capping in Task 3
+break the relationship slightly.»**
+
+> It is not exactly zero, for the reason given in Task 3b. (12 ord, erstatter 19)
+
+Dette er den eneste ringvirkningen som gir ord tilbake.
+
+### R9, innledningen kan ikke miste Sudan helt
+
+Kuttlisten foreslår 70 ord fra Sudan- og USSR-detaljen. Setningen «avoids most border changes»
+trenger unntaket sitt, ellers står «most» uten dekning.
+
+**Behold en kort variant.**
+
+> The exception is Sudan, which split in 2011 and therefore appears as three categories. (14 ord)
+
+Kuttet blir da rundt 25 ord og ikke 70.
+
+### R10, 2c kan ikke miste soppens ekstremverdi
+
+3a sier at største avling nå er nederlandske veksthusagurker fordi soppen er fjernet. Det forutsetter
+at 2c har sagt at soppfjerningen tok ut de tre største avlingene. Behold den klausulen, og ta kuttet
+i resten av soppavsnittet.
+
+Kuttet blir da rundt 20 ord og ikke 40.
+
+---
+
+## Del 9, revidert ordbudsjett
+
+Ringvirkningene koster netto rundt 88 ord, og R2, R9 og R10 reduserer kuttlisten med rundt 90 ord.
+Til sammen ligger rapporten da rundt 3 090 ord etter oppgavetekstens regel, altså fortsatt over
+grensen. Disse fire kuttene lukker gapet uten å røre noe som er bærende.
+
+| Sted | Hva | Ord |
+|---|---|---|
+| 2a | De fem kulepunktene, Tabell 5 har allerede årsak, tiltak og antall for hvert steg, så kulepunktene kan bli tre korte linjer | 60 |
+| 4a | Hele tredje avsnitt om antall kolonner, ikke bare halve, poenget om sparse matriser og k-NN kan bli én setning | 110 |
+| Innledningen | Hovedvekst-begrunnelsen med hvete og median, kortes til en klausul | 20 |
+| 5b | Første avsnitt overlapper med det nye avsnittet om validering, fjern gjentakelsen | 30 |
+
+| Post | Ord |
+|---|---|
+| Brødtekst i dag | 2 984 |
+| Tillegg, del 2 | +455 |
+| Tillegg, del 8 | +88 |
+| Kutt, del 3 justert for R2, R9 og R10 | −610 |
+| Kutt, del 9 | −220 |
+| **Brødtekst etter alt** | **≈ 2 697** |
+| Bildetekster, etter at den dupliserte er fjernet | 155 |
+| Seksjonsoverskrifter | 16 |
+| **Sum etter oppgavetekstens regel** | **≈ 2 868** |
+
+Det gir rundt 130 ords margin, som er nok til at en sensor med en annen teller ikke havner over.
+
+---
+
+## Del 10, sluttkontroll av sammenhengen
+
+Les rapporten én gang til slutt og følg disse seks trådene fra første til siste side. Hver tråd skal
+nevnes i alle oppgavene i kolonnen, og ingen av dem skal introdusere noe nytt etter oppgave 1.
+
+| Tråd | Innledning | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|---|
+| Formål og målvariabel | innføres | – | utledet mål i 34 rader | cappet mål | skalert mål | lekkasje mot målet | bekreftes |
+| Identiteten | – | innføres | brukes | brytes, sies | – | – | bekreftes |
+| Lekkasje | – | – | erkjennes | erkjennes | unngås | rekkefølgen | unngås |
+| Panelstruktur | – | innføres | brukes | – | – | drøftes | – |
+| Outliers er ekte | – | innføres | soppen | brukes, og cappes med begrunnelse | – | – | – |
+| Antall serier | – | 9 421 | 8 436 | 8 316 | – | 8 316 | – |
+
+Er alle seks radene fylt slik tabellen viser, er rapporten sammenhengende. Det er den eneste
+kontrollen som fanger opp motsetninger mellom oppgaver, fordi hver oppgave for seg allerede er god.
