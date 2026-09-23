@@ -14,7 +14,7 @@
 }
 
 \title{Assignment 1 - IT3212}
-\author{Group 50 \\ \\ Jesper Hagen, Synne Holmøy, Erlend Skogan, \\ Even Bøifot and Eira Stiksrud Sponheim \\ \\ \\ \\ Word count: 2,963 (text, headings and captions; references excluded)}
+\author{Group 50 \\ \\ Jesper Hagen, Synne Holmøy, Erlend Skogan, \\ Even Bøifot and Eira Stiksrud Sponheim \\ \\ \\ \\ Word count: 2,917}
 \date{}
 
 \setlength{\parindent}{0pt}
@@ -161,11 +161,9 @@ For the partial gaps, we estimated yield because it is independent of country si
 Because the three measurements span very different scales across crops, outliers are detected within each crop (\texttt{Item}) rather than on the column as a whole, otherwise sugar cane would be compared with vanilla. Three methods are compared (Table~\ref{tab:outlier-methods}). The raw IQR rule ($1.5\times$IQR per crop) flags the 13--14\% and 4.5\% already reported in Task 1b. As noted there, most of these are genuine: with mushrooms removed (Task 2), the highest yield is now Dutch greenhouse cucumbers (743 tonnes/ha), a real but different (greenhouse) production system. An ordinary z-score (raw scale, per crop) flags fewer values (1.5--2.2\%) but assumes an approximately symmetric distribution, which these right-skewed measurements do not have. IQR computed on $\log_{10}(x+1)$ flags fewer still (1.3\% for area and production, 2.9\% for yield). That a log transform alone removes most of what the raw IQR rule flags shows that the bulk of it reflects the shape of the distribution, not data errors.
 
 \textbf{b.}
-We transform area, production and yield with $\log_{10}(x+1)$ rather than removing or capping on the raw scale. The comparison above is the justification: since the transform alone cuts the flagged share from 13--14\% to 1.3--2.9\%, correcting the distribution is more accurate than deleting or capping a tenth of the data, most of which is genuine variation (Task 1b). We use $\log_{10}(x+1)$ rather than $\log_{10}(x)$ because 31 rows have production and yield equal to 0, genuine crop failure for which $\log_{10}(0)$ is undefined, while the log1p variant keeps them without distorting the rest. Dropping them was rejected because crop failure is a real event, not an error, and they fall in 17 of the 8,316 series.
+We transform area, production and yield with $\log_{10}(x+1)$ rather than removing or capping them. The comparison above is the justification: since the transform alone cuts the flagged share from 13--14\% to 1.3--2.9\%, correcting the distribution is more accurate than deleting or capping a tenth of the data, most of which is genuine variation (Task 1b). We use $\log_{10}(x+1)$ rather than $\log_{10}(x)$ because 31 rows have production and yield equal to 0, genuine crop failure for which $\log_{10}(0)$ is undefined, while the log1p variant keeps them without distorting the rest. Dropping them was rejected because crop failure is a real event, not an error, and they fall in 17 of the 8,316 series.
 
-The outliers that remain (1.3--2.9\%, by IQR on $\log_{10}$) are extreme relative to their own crop even after the skew is corrected, so capping them changes the fewest values for the largest effect. These are winsorised to the $1.5\times$IQR boundary per crop on the log scale (Figure~\ref{fig:outliers}). This affects 3,986 of 88,735 rows and changes no row, country or crop, unlike Task 2, where deletion was the only option. The \texttt{*\_log10} columns are log-transformed and capped, ready for scaling in Task 4, and \texttt{*\_capped} flags the capped cells, the same pattern as \texttt{imputed} in Task 2.
-
-Three consequences follow. The bounds are computed on the full dataset, so capping leaks in the same limited sense as the imputation in Task 2. Capping each column separately breaks the identity from Task 1a, which is why PC3 in Task 6 is not exactly zero. The lower bound also lifts the 31 crop failure rows off zero and caps 2,575 cells of the target column, which we accept because the flags make both changes reversible.
+The values still flagged after the transform (1.3--2.9\%, by IQR on $\log_{10}$) are kept as well. Three quarters of them lie below the lower bound and belong to very small producers, with a median of 6 ha for area and 12 tonnes for production, so they are the same genuine variation in country size as in Task 1b, not errors. Capping them would also alter the target in 1,132 cells, lift the 31 crop failure rows off zero, which is the reason for choosing $\log_{10}(x+1)$, and require bounds fitted before the split in Task 5. The transform changes no row, country or crop (Figure~\ref{fig:outliers}), and the \texttt{*\_log10} columns are ready for scaling in Task 4.
 
 \begin{table}[H]
     \centering
@@ -185,25 +183,25 @@ Three consequences follow. The bounds are computed on the full dataset, so cappi
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{fig3_outliers.png}
-    \caption{Box plots of $\log_{10}(x+1)$, before and after capping the remaining outliers, one panel per measurement.}
+    \caption{The three measurements on the raw scale (top) and after $\log_{10}(x+1)$ (bottom), with the share flagged by IQR per crop on each scale.}
     \label{fig:outliers}
 \end{figure}
 
 \section{Data Transformation}
 
 \textbf{a.}
-The only categorical columns are \texttt{Area} (200 countries) and \texttt{Item} (117 crops); \texttt{Year} is already numeric (Task 1a), and \texttt{imputed} and the \texttt{*\_capped} flags from Tasks 2--3 are boolean indicators, not categories, so neither is encoded here. We use one-hot encoding: each unique value of \texttt{Area} and \texttt{Item} gets its own binary (0/1) column, e.g.\ \texttt{Area\_Afghanistan}, \ldots, \texttt{Item\_Almonds, with shell}, \ldots. This adds 317 columns, 200 for \texttt{Area} and 117 for \texttt{Item}.
+The only categorical columns are \texttt{Area} (200 countries) and \texttt{Item} (117 crops); \texttt{Year} is already numeric (Task 1a), and \texttt{imputed} from Task 2 is a boolean indicator, not a category, so neither is encoded here. We use one-hot encoding: each unique value of \texttt{Area} and \texttt{Item} gets its own binary (0/1) column, e.g.\ \texttt{Area\_Afghanistan}, \ldots, \texttt{Item\_Almonds, with shell}, \ldots. This adds 317 columns, 200 for \texttt{Area} and 117 for \texttt{Item}.
 
 Both columns are nominal categories with no natural ordering, one country or crop is not ``more'' or ``less'' than another, and one-hot encoding is the appropriate choice for exactly that reason. Label encoding (Afghanistan~=~0, Albania~=~1, \ldots) would have implied a rank and a distance that do not exist, and would be particularly damaging for a variance-based method such as PCA, which reads any numeric spread as structure. Task 6 tests this directly: the one-hot columns carry almost no variance, the opposite of what a label-encoded column would have shown.
 
 With 88,735 rows, 317 binary columns is a manageable ratio of rows to features, and a high column count would matter mainly for distance-based methods such as k-nearest neighbours, which we do not use.
 
 \textbf{b.}
-Task 3 corrected the strong right-skew (Task 1b) with $\log_{10}(x+1)$ and capping, but the three log-scaled measurements still span different ranges (roughly 0 to 7.7 for area, 0 to 8.9 for production and 2.6 to 6.7 for yield), and distance- or gradient-based models are sensitive to such differences in scale.
+Task 3 corrected the strong right-skew (Task 1b) with $\log_{10}(x+1)$, but the three log-scaled measurements still span different ranges (roughly 0 to 7.7 for area, 0 to 8.9 for production and 0 to 6.9 for yield), and distance- or gradient-based models are sensitive to such differences in scale.
 
-We use standardisation ($x' = (x-\bar{x})/s$) rather than min-max normalisation. Because Task 3 already pulled in the outliers, the mean and standard deviation are more meaningful measures of spread than the min and max, which would still be anchored to each column's two endpoints and would compress the rest of the data near the middle of $[0,1]$.
+We use standardisation ($x' = (x-\bar{x})/s$) rather than min-max normalisation. Because the log transform in Task 3 made the distributions close to symmetric, the mean and standard deviation are meaningful measures of spread, whereas the min and max would be anchored to the outliers kept in Task 3b, such as the crop failures at zero, and would compress the rest of the data near the middle of $[0,1]$.
 
-The scaling parameters are computed from the training set of Task 5 only (Table~\ref{tab:scaling}) and are then applied to both sets, so the dataset is split before it is scaled, not after. Fitting on the full dataset, or fitting a separate scaler per set, would let the test distribution shape how the training data is represented and give an artificially optimistic picture of generalisation. The training set therefore has mean 0 and standard deviation 1 by construction, while the test set lands close to but not exactly at 0/1 ($-0.005/0.990$ for area), a check that the procedure was done correctly. The one-hot columns, \texttt{Year}, \texttt{imputed} and the \texttt{*\_capped} flags are not scaled, since the one-hot columns and the flags are binary and \texttt{Year} is an ordered count on its own natural scale (Task 1a). Production is standardised with the other two measurements because Task 6 needs all three on a common scale, and a model would be fitted on the standardised features with its predictions transformed back.
+The scaling parameters are computed from the training set of Task 5 only (Table~\ref{tab:scaling}) and are then applied to both sets, so the dataset is split before it is scaled, not after. Fitting on the full dataset, or fitting a separate scaler per set, would let the test distribution shape how the training data is represented and give an artificially optimistic picture of generalisation. The training set therefore has mean 0 and standard deviation 1 by construction, while the test set lands close to but not exactly at 0/1 ($-0.004/0.990$ for area), a check that the procedure was done correctly. The one-hot columns, \texttt{Year} and \texttt{imputed} are not scaled, since the one-hot columns and the flag are binary and \texttt{Year} is an ordered count on its own natural scale (Task 1a). Production is standardised with the other two measurements because Task 6 needs all three on a common scale, and a model would be fitted on the standardised features with its predictions transformed back.
 
 Scaling changes no information in the data, only its representation, but it changes how a model uses it. A linear model fitted on unscaled columns gives coefficients in units that cannot be compared, and gradient descent converges slowly when one column is orders of magnitude wider than another. With standardised inputs the coefficients are comparable in standard deviations, regularisation penalises every column equally, and PCA in Task 6 finds the directions of largest variance rather than the column with the largest unit.
 
@@ -213,9 +211,9 @@ Scaling changes no information in the data, only its representation, but it chan
         \toprule
         Column & Mean & Std. dev. \\
         \midrule
-        \texttt{area\_harvested\_ha\_log10} & 3.567 & 1.246 \\
-        \texttt{production\_tonnes\_log10} & 4.283 & 1.310 \\
-        \texttt{yield\_hg\_per\_ha\_log10} & 4.722 & 0.585 \\
+        \texttt{area\_harvested\_ha\_log10} & 3.564 & 1.256 \\
+        \texttt{production\_tonnes\_log10} & 4.279 & 1.322 \\
+        \texttt{yield\_hg\_per\_ha\_log10} & 4.717 & 0.600 \\
         \bottomrule
     \end{tabular}
     \caption{Standardisation parameters for the log-scaled measurements, computed on the training set only.}
@@ -236,11 +234,11 @@ Splitting the data lets the model be evaluated on rows it has not seen during tr
 
 \textit{Method.} We use PCA rather than LDA because the dataset has no classes and LDA requires class labels. PCA is unsupervised, finds the directions of largest variance and is linear, so we use the log-transformed, standardised measurements from Tasks 3 and 4b, where the identity from Task 1a becomes the approximately linear relationship $\log(\mathit{yield}) \approx \log(\mathit{production}) - \log(\mathit{area}) + 4$. The main run covers all three measurements, and not only the feature set from the introduction, because its purpose is to quantify their redundancy rather than to build features; the one-hot columns (Task 4a) are tested separately below. The data were centred in Task 4b, and PCA is fitted on the training set and applied unchanged to the test set, as with the scaling.
 
-\textit{Results.} Area and production are strongly correlated ($r = 0.89$). The first two components explain 99.95\% of the variance (Table~\ref{tab:pca}), so we keep two components under a 95\% threshold, and the Kaiser criterion (eigenvalue $> 1$) gives the same. PC1 weights area and production and describes the scale of cultivation, while PC2 is dominated by yield and describes productivity (Figure~\ref{fig:pca}). PC3 is the combination production $-$ area $-$ yield, i.e.\ the relationship between the measurements itself, and has almost no variance. It is not exactly zero, for the reason given in Task 3b.
+\textit{Results.} Area and production are strongly correlated ($r = 0.90$). The first two components explain 99.97\% of the variance (Table~\ref{tab:pca}), so we keep two components under a 95\% threshold, and the Kaiser criterion (eigenvalue $> 1$) gives the same. PC1 weights area and production and describes the scale of cultivation, while PC2 is dominated by yield and describes productivity (Figure~\ref{fig:pca}). PC3 is the combination production $-$ area $-$ yield, i.e.\ the relationship between the measurements itself, and has almost no variance. It is not exactly zero because the $+1$ in $\log_{10}(x+1)$ makes the relationship only approximately linear for the smallest values.
 
-\textit{The one-hot columns.} The dataset has 328 columns after Task 4a, so we also tested including the 317 one-hot columns. They do not compress: 213 of 320 components are needed to reach 95\%, against two of three without them, because each column has a variance of only 0.006 and the columns within \texttt{Area} and \texttt{Item} are mutually exclusive. PC1 and PC2 barely change, keeping 99.8\% and 99.2\% of their weight on the measurements, so we run PCA on the measurements alone.
+\textit{The one-hot columns.} The dataset has 325 columns after Task 4a, so we also tested including the 317 one-hot columns. They do not compress: 213 of 320 components are needed to reach 95\%, against two of three without them, because each column has a variance of only 0.006 and the columns within \texttt{Area} and \texttt{Item} are mutually exclusive. PC1 and PC2 barely change, keeping 99.8\% and 99.2\% of their weight on the measurements, so we run PCA on the measurements alone.
 
-\textit{Effect on the dataset.} The dataset goes from three to two uncorrelated columns, and reconstructing the measurements from them loses only 0.05\% of the variance on the training set and 0.06\% on the test set, so the projection holds on unseen data. The gain is nevertheless small: dropping yield, which can almost be computed from the other two ($R^2 = 0.98$), loses 0.5--0.6\% and keeps columns that are easy to interpret. PCA thus confirms on the data what Task 1a stated from the definition, that the three measurements carry two independent quantities, and it supports leaving yield out of the feature set.
+\textit{Effect on the dataset.} The dataset goes from three to two uncorrelated columns, and reconstructing the measurements from them loses only 0.03\% of the variance on the training set and 0.06\% on the test set, so the projection holds on unseen data. The gain is nevertheless small: dropping yield, which can almost be computed from the other two ($R^2 = 0.98$), loses 0.3--0.6\% and keeps columns that are easy to interpret. PCA thus confirms on the data what Task 1a stated from the definition, that the three measurements carry two independent quantities, and it supports leaving yield out of the feature set.
 
 \begin{table}[H]
     \centering
@@ -248,9 +246,9 @@ Splitting the data lets the model be evaluated on rows it has not seen during tr
         \toprule
         Component & Eigenvalue & Explained (\%) & Cumulative (\%) & Area & Production & Yield \\
         \midrule
-        PC1 & 1.914 & 63.79 & 63.79 & 0.680 & 0.718 & 0.150 \\
-        PC2 & 1.085 & 36.16 & 99.95 & $-0.325$ & 0.112 & 0.939 \\
-        PC3 & 0.001 & 0.05 & 100.00 & $-0.657$ & 0.687 & $-0.309$ \\
+        PC1 & 1.919 & 63.95 & 63.95 & 0.677 & 0.718 & 0.162 \\
+        PC2 & 1.081 & 36.02 & 99.97 & $-0.333$ & 0.103 & 0.937 \\
+        PC3 & 0.001 & 0.03 & 100.00 & $-0.656$ & 0.689 & $-0.308$ \\
         \bottomrule
     \end{tabular}
     \caption{Eigenvalues, explained variance and eigenvectors (fitted on the training set).}

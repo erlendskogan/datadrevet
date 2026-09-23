@@ -3,12 +3,13 @@
   C1  Detekter per vekst (Item), tre metoder til sammenligning:
       rå IQR, IQR på log10(x+1), og z-score (rå skala)
   C2  Avgjørelse: log10(x+1)-transformer alle tre målinger (log1p-varianten
-      håndterer de 31 radene med produksjon = avling = 0), og cap
-      (winsoriser) de gjenværende outlierne på log-skala med IQR per vekst
+      håndterer de 31 radene med produksjon = avling = 0). Ingenting fjernes
+      eller cappes
 
 Outliers er stort sett ekte (tunghalede fordelinger, jf. oppgave 1b), så ingen
-rader slettes her. Kolonnene *_log10 er log-transformert og klare til skalering
-i oppgave 4; *_capped markerer cappede celler (samme mønster som `imputed`).
+rader slettes her. De som fortsatt flagges etter log-transformen er for det
+meste små produsenter på nedsiden, og også de er ekte. Kolonnene *_log10 er
+log-transformert og klare til skalering i oppgave 4.
 Inn: food-bank/crop1_clean.csv  ->  Ut: food-bank/crop1_outliers.csv,
      assignment1/rapport/figurer/fig3_outliers.png
 Kjør: python assignment1/src/3_outliers.py
@@ -78,50 +79,50 @@ print(f"\nStørste avling nå (sopp fjernet i oppgave 2):\n{top.to_string(index=
 # ================================== 3b ======================================
 # At IQR på log10 flagger MYE færre (1.3-2.9 %) enn rå IQR (13-14 %/4.5 %)
 # viser at det meste av det rå IQR flagger, skyldes formen på fordelingen
-# (skjevhet), ikke feil i dataene -> vi transformerer fremfor å fjerne/cappe
-# på rå skala, og capper bare det som fortsatt stikker seg ut etterpå.
-section("3b  Avgjørelse: log10(x+1)-transformer, cap gjenværende outliers på log-skala")
+# (skjevhet), ikke feil i dataene -> vi transformerer. Det som fortsatt
+# flagges etterpå, er for det meste små produsenter på nedsiden, og beholdes.
+section("3b  Avgjørelse: log10(x+1)-transformer, behold gjenværende outliers")
 
 LOG = {c: f"{c}_log10" for c in NUM}
 for c in NUM:
     df[LOG[c]] = np.log10(df[c] + 1)
 
-cap_stats = []
+rest = []
 for c in NUM:
     lc = LOG[c]
     q1 = df.groupby("Item")[lc].transform(lambda g: g.quantile(0.25))
     q3 = df.groupby("Item")[lc].transform(lambda g: g.quantile(0.75))
     iqr = q3 - q1
-    lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr
-    flag = (df[lc] < lo) | (df[lc] > hi)
-    df[lc] = df[lc].clip(lower=lo, upper=hi)
-    df[f"{c}_capped"] = flag
-    cap_stats.append({"kolonne": c, "cappet_celler": int(flag.sum()),
-                       "cappet_%": round(flag.mean() * 100, 1)})
-
-print(pd.DataFrame(cap_stats).to_string(index=False))
-any_capped = df[[f"{c}_capped" for c in NUM]].any(axis=1)
-print(f"\nRader med >=1 cappet verdi: {any_capped.sum():,} ({any_capped.mean() * 100:.1f} %)")
+    low, high = df[lc] < q1 - 1.5 * iqr, df[lc] > q3 + 1.5 * iqr
+    rest.append({"kolonne": c, "flagget": int((low | high).sum()), "nedside": int(low.sum()),
+                 "overside": int(high.sum()), "median_rå_nedside": df.loc[low, c].median()})
+print("Gjenværende outliers etter log10(x+1) (IQR per vekst), beholdes:")
+print(pd.DataFrame(rest).to_string(index=False))
+print(f"\nSkjevhet før -> etter log10(x+1): " + ", ".join(
+    f"{c} {df[c].skew():.1f} -> {df[LOG[c]].skew():.2f}" for c in NUM))
 print(f"Rader/land/vekster uendret: {len(df):,} rader, {df['Area'].nunique()} land, {df['Item'].nunique()} vekster")
 
 df.to_csv(OUTLIERS, index=False)
 
 # ================================ Figur 3 ===================================
-fig, axes = plt.subplots(1, 3, figsize=(7.2, 2.8))
-clean_raw = read(CLEAN)
-for ax, c in zip(axes, NUM):
-    before = np.log10(clean_raw[c] + 1)
-    after = df[LOG[c]]
-    ax.boxplot([before, after], widths=0.5, patch_artist=True, tick_labels=["before", "after"],
-               boxprops=dict(facecolor="#cde2fb", edgecolor=BLUE, linewidth=1.2),
-               medianprops=dict(color=BLUE, linewidth=2), whiskerprops=dict(color=BLUE),
-               capprops=dict(color=BLUE),
-               flierprops=dict(marker="o", markersize=2, markerfacecolor=INK2,
-                               markeredgewidth=0, alpha=0.25))
-    ax.set_title(FIG_LABEL[c], color=INK, fontsize=9)
-    ax.grid(axis="y", color=GRID, linewidth=0.8, which="major")
-    ax.set_axisbelow(True)
-fig.suptitle("log10(x+1), before vs. after capping remaining outliers", color=INK, fontsize=9)
+# Samme måling på rå skala (øverst) og etter log10(x+1) (nederst), med andelen
+# IQR per vekst flagger på hver skala (fra Tabell 6).
+share = {r["kolonne"]: r for r in rows}
+fig, axes = plt.subplots(2, 3, figsize=(7.2, 4.2))
+for j, c in enumerate(NUM):
+    for i, (vals, key, label) in enumerate([(df[c], "IQR (rå), %", "raw"),
+                                            (df[LOG[c]], "IQR (log10), %", "log10(x+1)")]):
+        ax = axes[i, j]
+        ax.hist(vals, bins=60, color=BLUE, edgecolor="none")
+        ax.set_ylim(0, ax.get_ylim()[1] * 1.2)  # plass til teksten over søylene
+        ax.set_title(f"{FIG_LABEL[c]}, {label}", color=INK, fontsize=8)
+        ax.text(0.97, 0.9, f"{share[c][key]}% flagged", transform=ax.transAxes,
+                ha="right", color=INK2, fontsize=8)
+        ax.ticklabel_format(axis="x", style="sci", scilimits=(-3, 4))
+        ax.grid(axis="y", color=GRID, linewidth=0.8)
+        ax.set_axisbelow(True)
+    axes[0, j].set_ylabel("Rows" if j == 0 else "")
+    axes[1, j].set_ylabel("Rows" if j == 0 else "")
 fig.tight_layout()
 fig.savefig(FIG / "fig3_outliers.png")
 plt.close(fig)

@@ -1,16 +1,16 @@
 """Oppgave 4b - skalering (standardisering) av de numeriske kolonnene.
 
 Standardisering (Z-score, x' = (x - gjennomsnitt) / std) er valgt fremfor
-min-max. Oppgave 3 log10-transformerte og cappet de tre målingene, noe som
-gjorde fordelingene tilnærmet symmetriske - da gir gjennomsnitt/std mer
-mening enn min/maks, som fortsatt ville vært styrt av de ytterpunktene
-(cappet, men ikke fjernet) som ligger igjen i dataene.
+min-max. Oppgave 3 log10-transformerte de tre målingene, noe som gjorde
+fordelingene tilnærmet symmetriske - da gir gjennomsnitt/std mer mening enn
+min/maks, som ville vært styrt av de ytterpunktene (beholdt, ikke cappet) som
+ligger igjen i dataene.
 
 Det er *_log10-kolonnene fra oppgave 3 som skaleres (area_harvested_ha_log10,
 production_tonnes_log10, yield_hg_per_ha_log10) - det er disse som faktisk
 skal brukes videre, ikke de rå målingene. One-hot-kolonnene for Area/Item
-(oppgave 4a), Year, imputed og *_capped skaleres ikke: one-hot-kolonnene og
-flaggene er binære, og Year er en ordnet telling på sin egen skala (oppgave 1a).
+(oppgave 4a), Year og imputed skaleres ikke: one-hot-kolonnene og
+flagget er binære, og Year er en ordnet telling på sin egen skala (oppgave 1a).
 
 Kjøres ETTER splitting (oppgave 5), ikke før, for å unngå datalekkasje:
 StandardScaler fittes KUN på treningssettet (fit_transform), og de samme

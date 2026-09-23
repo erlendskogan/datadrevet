@@ -28,7 +28,7 @@ from sklearn.linear_model import LinearRegression
 from felles import DATA, FIGURES as FIG, KEYS, NUM, A, P, Y, read
 
 SCALED = [f"{c}_scaled" for c in NUM]
-FLAGS = ["imputed"] + [f"{c}_capped" for c in NUM]
+FLAGS = ["imputed"]
 SHORT = {A: "Area", P: "Production", Y: "Yield"}
 THRESHOLD = 0.95
 BLUE, INK, INK2, GRID = "#2a78d6", "#0b0b0b", "#52514e", "#e6e5e1"

@@ -5,8 +5,8 @@
 
 **a. Encoding.**
 De eneste kategoriske kolonnene er `Area` (200 land) og `Item` (117 vekster). `Year` er allerede
-numerisk (oppgave 1a), og `imputed` og `*_capped` er boolske flagg og ikke kategorier, så ingen av
-dem encodes. Vi bruker one-hot encoding, der hver unike verdi får sin egen binære kolonne. Det gir
+numerisk (oppgave 1a), og `imputed` er et boolsk flagg og ikke en kategori, så ingen av dem
+encodes. Vi bruker one-hot encoding, der hver unike verdi får sin egen binære kolonne. Det gir
 317 nye kolonner, 200 for `Area` og 117 for `Item`.
 
 Begge kolonnene er nominelle kategorier uten naturlig rekkefølge, ett land eller én vekst er ikke
@@ -19,21 +19,22 @@ forhold mellom rader og features, og et høyt kolonnetall ville først og fremst
 avstandsbaserte metoder som k-NN, som vi ikke bruker.
 
 **b. Skalering.**
-Oppgave 3 rettet den sterke høyreskjevheten med log10(x+1) og capping, men de tre log-skalerte
-målingene spenner fortsatt ulike områder (omtrent 0–7,7 for areal, 0–8,9 for produksjon og 2,6–6,7
+Oppgave 3 rettet den sterke høyreskjevheten med log10(x+1), men de tre log-skalerte
+målingene spenner fortsatt ulike områder (omtrent 0–7,7 for areal, 0–8,9 for produksjon og 0–6,9
 for avling), og avstands- eller gradientbaserte modeller er følsomme for slike forskjeller.
 
-Vi bruker standardisering (x' = (x − gjennomsnitt) / std) fremfor min-max. Fordi oppgave 3 allerede
-har trukket inn uteliggerne, er gjennomsnitt og standardavvik mer meningsfulle mål på spredning enn
-min og maks, som fortsatt ville vært styrt av de to ytterpunktene i hver kolonne.
+Vi bruker standardisering (x' = (x − gjennomsnitt) / std) fremfor min-max. Fordi log-transformasjonen
+i oppgave 3 gjorde fordelingene tilnærmet symmetriske, er gjennomsnitt og standardavvik meningsfulle
+mål på spredning, mens min og maks ville vært styrt av uteliggerne som ble beholdt i 3b, for
+eksempel avlingssviktene på 0.
 
 Skaleringsparametrene beregnes bare på treningssettet fra oppgave 5 og brukes deretter på begge
 settene, så datasettet splittes før det skaleres, ikke etter. Å fitte på hele datasettet, eller å
 fitte én scaler per sett, ville latt testfordelingen påvirke representasjonen av treningsdataene.
 Treningssettet får dermed gjennomsnitt 0 og standardavvik 1 per konstruksjon, mens testsettet lander
-nær, men ikke nøyaktig på, 0/1 (−0,005/0,990 for areal), som er en kontroll på at framgangsmåten er
-riktig. One-hot-kolonnene, `Year`, `imputed` og `*_capped` skaleres ikke, fordi one-hot-kolonnene og
-flaggene er binære og `Year` er en ordnet telling på sin egen naturlige skala (oppgave 1a).
+nær, men ikke nøyaktig på, 0/1 (−0,004/0,990 for areal), som er en kontroll på at framgangsmåten er
+riktig. One-hot-kolonnene, `Year` og `imputed` skaleres ikke, fordi one-hot-kolonnene og
+flagget er binære og `Year` er en ordnet telling på sin egen naturlige skala (oppgave 1a).
 **Produksjon standardiseres sammen med de to andre målingene** fordi oppgave 6 trenger alle tre på
 felles skala, og en modell ville blitt tilpasset på de standardiserte featurene med prediksjonene
 transformert tilbake.
@@ -49,6 +50,6 @@ retningene med størst varians i stedet for kolonnen med størst enhet.
 
 | Kolonne | Gjennomsnitt | Std.avvik |
 |---|---:|---:|
-| area_harvested_ha_log10 | 3,567 | 1,246 |
-| production_tonnes_log10 | 4,283 | 1,310 |
-| yield_hg_per_ha_log10 | 4,722 | 0,585 |
+| area_harvested_ha_log10 | 3,564 | 1,256 |
+| production_tonnes_log10 | 4,279 | 1,322 |
+| yield_hg_per_ha_log10 | 4,717 | 0,600 |

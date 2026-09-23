@@ -10,11 +10,10 @@ meningsløs struktur å fange opp. Kostnaden er antall kolonner: 200 unike land
 og 117 unike vekster gir til sammen 317 nye binære kolonner.
 
 Bygger videre på oppgave 3 (crop1_outliers.csv), som la til *_log10 (log-
-transformerte målinger, klare til skalering i 4b) og *_capped (flagg for
-cappede celler, samme rolle som `imputed`). Disse kolonnene røres ikke her -
-de følger bare med videre uendret. Year holdes numerisk (som i oppgave 1) og
-encodes ikke. `imputed` og *_capped er flagg, ikke kategorier, og encodes
-heller ikke.
+transformerte målinger, klare til skalering i 4b). Disse kolonnene røres ikke
+her - de følger bare med videre uendret. Year holdes numerisk (som i oppgave 1)
+og encodes ikke. `imputed` er et flagg, ikke en kategori, og encodes heller
+ikke.
 
 Inn: food-bank/crop1_outliers.csv  ->  Ut: food-bank/crop1_encoded.csv
 Kjør: python assignment1/src/4_encoding.py

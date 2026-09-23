@@ -114,12 +114,12 @@ Målt med Overleafs egen teller (texcount) på `main.tex`:
 
 | Post | Ord |
 |---|---|
-| Brødtekst | 2 826 |
-| Bildetekster (11 stykker) | 144 |
+| Brødtekst | 2 772 |
+| Bildetekster (11 stykker) | 152 |
 | Seksjonsoverskrifter | 16 |
-| **Sum** | **2 986** |
+| **Sum** | **2 940** |
 | Minus referanselisten, som ikke teller | −23 |
-| **Oppgitt på forsiden** | **2 963** |
+| **Oppgitt på forsiden** | **2 917** |
 
 Tallet hentes med `GET /project/<id>/wordcount?file=main.tex` i Overleaf, eller fra menyen.
 Legger du til tekst, må du hente ut like mye et annet sted.
