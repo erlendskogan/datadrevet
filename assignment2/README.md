@@ -1,6 +1,6 @@
 # Assignment 2 – Image Processing
 
-Oppgaveteksten ligger i `oppgave.pdf`. Datasettene er fra Blackboard og ligger utenfor repoet i
+Oppgaveteksten ligger i `oppgave.pdf`. Datasettene er fra Canvas og ligger utenfor repoet i
 `../../datasett/images/`.
 
 ## Valg av datasett: `heatmap-performance`
@@ -13,9 +13,8 @@ Oppgaveteksten ligger i `oppgave.pdf`. Datasettene er fra Blackboard og ligger u
 
 ### Hvorfor dette settet
 
-Oppgaveteksten krever bare et datasett fra Blackboard på ett sted: blob-deteksjonen skal kjøres på
-*«one of the provided image datasets»*, og konturdeteksjonen på *«the same image dataset»*. Disse to
-oppgavene gir 30 av 100 poeng. Fourier, PCA, HOG og LBP kan bruke hvilke bilder som helst. Valget av
+Oppgaveteksten krever bare et datasett fra Canvas på ett sted: blob-deteksjonen skal kjøres på
+*«one of the provided image datasets»*, og konturdeteksjonen på *«the same image dataset»*. Disse to oppgavene gir 30 av 100 poeng. Fourier, PCA, HOG og LBP kan bruke hvilke bilder som helst. Valget av
 datasett avgjøres derfor først og fremst av hvor godt blob- og konturdeteksjonen fungerer, og
 40 % av karakteren på hver oppgave gis for «Insight in Discussion».
 
@@ -69,7 +68,7 @@ an å diskutere avveiningen mellom kompresjon og kvalitet.
 - **intel-image-classification** (landskapsbilder på 150×150 i seks klasser, ca. 17 000 merkede bilder) er et
   godt nummer to. Settet egner seg godt til Fourier, HOG og LBP, med enkle scener som hav og isbre og
   komplekse scener som skog og gate. Problemet er blob- og konturdeteksjonen, som er den eneste delen
-  som *må* bruke et Blackboard-sett. Her finnes det ingen naturlige blobber, så antallet avhenger bare
+  som *må* bruke et Canvas-sett. Her finnes det ingen naturlige blobber, så antallet avhenger bare
   av parametrene, og diskusjonen får lite å bygge på. Bildene er heller ikke justert mot hverandre, så
   PCA fanger for det meste opp generell lysstyrke og fordeling av himmel og bakke.
 - **vehicle-type-detection** (1 310 bilder) har nesten bare unike bildestørrelser (294 forskjellige i
@@ -89,7 +88,7 @@ an å diskutere avveiningen mellom kompresjon og kvalitet.
   gråtone og er i seg selv et diskusjonspoeng.
 - **LBP ber om en naturscene, en tekstur og et ansikt.** Heatmapene inneholder ingen av delene.
   Oppgaven sier *«You are also allowed to use any other dataset from outside sources»*, og kravet om
-  Blackboard-data gjelder bare blob og kontur. Til LBP (og gjerne HOG) bruker vi derfor enkeltbilder
+  Canvas-data gjelder bare blob og kontur. Til LBP (og gjerne HOG) bruker vi derfor enkeltbilder
   i tillegg: et skogbilde fra Intel-settet som tekstur, et landskap fra Intel som naturscene, og et
   ansikt fra facial-emotion-settet eller `skimage.data.astronaut()`. Dette må stå tydelig i
   rapporten.
