@@ -1,0 +1,540 @@
+<title>HOG-skolen</title>
+<meta name="description" content="Kort, interaktivt kurs i Histogram of Oriented Gradients for Assignment 2 i IT3212.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#EEF1F3;
+  --surface:#FFFFFF;
+  --surface-2:#E3E8EC;
+  --ink:#131B22;
+  --ink-2:#3A4652;
+  --muted:#677380;
+  --line:#CDD5DC;
+  --accent:#1C5DA8;
+  --accent-soft:#DCE7F4;
+  --warm:#B8611A;
+  --warm-soft:#F5E4D3;
+  --plate:#0B0F13;
+  --shadow:0 1px 2px rgba(19,27,34,.06),0 10px 28px -18px rgba(19,27,34,.4);
+  --f-display:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-body:"Literata",Georgia,"Times New Roman",serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#0D1216;--surface:#151C22;--surface-2:#1C252D;--ink:#E3E9EE;--ink-2:#B5C0CA;--muted:#8391A0;
+    --line:#29343E;--accent:#7FB2EE;--accent-soft:#16263A;--warm:#E8A064;--warm-soft:#33230F;--plate:#070A0D;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0D1216;--surface:#151C22;--surface-2:#1C252D;--ink:#E3E9EE;--ink-2:#B5C0CA;--muted:#8391A0;
+  --line:#29343E;--accent:#7FB2EE;--accent-soft:#16263A;--warm:#E8A064;--warm-soft:#33230F;--plate:#070A0D;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -18px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.62;padding-inline:20px;padding-block:0 80px}
+.wrap{max-width:1040px;margin:0 auto}
+.prose{max-width:680px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(2.3rem,6vw,3.6rem);font-weight:800;letter-spacing:-.025em}
+h2{font-size:1.7rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+code,.mono{font-family:var(--f-mono);font-size:.86em}
+:not(pre)>code{background:var(--surface-2);padding:.1em .35em;border-radius:4px}
+a{color:var(--accent)}
+em{font-style:italic}
+
+/* header */
+header.hero{padding-block:56px 36px;display:grid;gap:18px;border-bottom:1px solid var(--line)}
+.hero .lede{font-size:1.15rem;color:var(--ink-2);max-width:640px}
+.hero .meta{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 20px}
+.pipeline{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin-top:8px}
+.pipeline .step{flex:1 1 160px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:2px}
+.pipeline .step b{font-family:var(--f-display);font-weight:600;font-size:.98rem}
+.pipeline .step span{font-size:.84rem;color:var(--muted);line-height:1.4}
+.pipeline .step i{font-family:var(--f-mono);font-style:normal;font-size:.72rem;color:var(--accent)}
+
+/* sections */
+section{padding-block:48px 8px;display:grid;gap:18px}
+section .prose{display:grid;gap:14px}
+.formula{font-family:var(--f-mono);font-size:.92rem;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;white-space:pre;line-height:1.7;color:var(--ink)}
+.note{background:var(--warm-soft);border-radius:8px;padding:12px 16px;font-size:.95rem;color:var(--ink)}
+.note b{font-family:var(--f-display)}
+
+/* widgets */
+.widget{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:20px;display:grid;gap:16px}
+.widget-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;align-items:baseline}
+.widget-head .hint{font-size:.85rem;color:var(--muted);font-family:var(--f-display)}
+.two{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:700px){.two{grid-template-columns:1fr}}
+canvas{display:block;max-width:100%}
+.controls{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;font-family:var(--f-display);font-size:.88rem}
+.ctl{display:grid;gap:4px;min-width:0}
+.ctl label,.ctl .lbl{color:var(--ink-2);font-weight:500}
+.ctl output{font-family:var(--f-mono);color:var(--accent);font-size:.82rem}
+input[type=range]{accent-color:var(--accent);width:180px;max-width:100%}
+select,button,.filebtn{font-family:var(--f-display);font-size:.88rem;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.readout{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-family:var(--f-mono);font-size:.86rem;margin:0}
+.readout dt{color:var(--muted)}
+.readout dd{margin:0;font-variant-numeric:tabular-nums}
+.bins9{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;margin-top:10px}
+.bins9 div{font-family:var(--f-mono);font-size:.62rem;text-align:center;padding:6px 0;border-radius:4px;background:var(--surface-2);color:var(--muted)}
+.bins9 div.on{background:var(--accent);color:var(--surface);font-weight:500}
+
+.lab-panels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.lab-panels{grid-template-columns:1fr}}
+.panel{display:grid;gap:6px}
+.panel figcaption{font-family:var(--f-display);font-size:.84rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.panel canvas{width:100%;aspect-ratio:1;border-radius:6px;background:var(--plate)}
+#hogC{cursor:crosshair}
+.stats{font-family:var(--f-mono);font-size:.84rem;background:var(--surface-2);border-radius:8px;padding:10px 14px;overflow-x:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
+.stats b{color:var(--accent);font-weight:500}
+.lab-bottom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:760px){.lab-bottom{grid-template-columns:1fr}}
+
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.93rem;min-width:620px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font-family:var(--f-display);font-weight:600;font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+td:first-child{font-family:var(--f-display);font-weight:600;white-space:nowrap}
+
+pre.code{background:var(--plate);color:#D8E2EA;border-radius:10px;padding:16px 18px;overflow-x:auto;font-family:var(--f-mono);font-size:.82rem;line-height:1.6;margin:0}
+pre.code .c{color:#7C8C99}
+pre.code .k{color:#8DBBF0}
+pre.code .s{color:#E8B37E}
+
+.checks{display:grid;gap:10px;padding:0;margin:0;list-style:none}
+.checks li{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:baseline}
+.checks li span{font-family:var(--f-mono);font-size:.78rem;color:var(--accent)}
+
+details{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 16px}
+details summary{cursor:pointer;font-family:var(--f-display);font-weight:600}
+details p{margin-top:10px;color:var(--ink-2)}
+.quiz{display:grid;gap:10px;max-width:680px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <span class="eyebrow">IT3212 · Assignment 2 · HOG Features (12 poeng)</span>
+  <h1>HOG-skolen</h1>
+  <p class="lede">Histogram of Oriented Gradients beskriver <em>formen</em> i et bilde ved å telle hvilke retninger kantene går i, område for område. Her er teorien du trenger før du skriver koden, med modeller du kan leke med underveis.</p>
+  <div class="pipeline" aria-label="HOG-pipelinen i fire steg">
+    <div class="step"><i>steg 1</i><b>Gradienter</b><span>Styrke og retning for hver piksel</span></div>
+    <div class="step"><i>steg 2</i><b>Cellehistogrammer</b><span>Retningene telles i små celler</span></div>
+    <div class="step"><i>steg 3</i><b>Blokknormalisering</b><span>Nabo-celler normaliseres sammen</span></div>
+    <div class="step"><i>steg 4</i><b>Deskriptor</b><span>Alt limes sammen til én vektor</span></div>
+  </div>
+  <div class="meta"><span>Dalal &amp; Triggs, CVPR 2005</span><span>skimage.feature.hog</span><span>ca. 20 min</span></div>
+</header>
+
+<section id="ide">
+  <div class="prose">
+    <span class="eyebrow">Idéen</span>
+    <h2>Form uten farger</h2>
+    <p>HOG ble laget for å finne fotgjengere. Poenget er at en person gjenkjennes på omrisset, ikke på fargen på jakka. Omrisset består av kanter, og en kant er et sted der lysstyrken endrer seg raskt. HOG måler derfor hvor bildet endrer seg og i hvilken retning, og oppsummerer det i histogrammer per lite område.</p>
+    <p>Resultatet er en lang tallvektor, en <em>feature descriptor</em>, som en klassifikator (typisk en SVM) kan bruke. I denne oppgaven skal du ikke trene noe. Du skal beregne, visualisere og forklare deskriptoren.</p>
+  </div>
+</section>
+
+<section id="gradienter">
+  <div class="prose">
+    <span class="eyebrow">Steg 1</span>
+    <h2>Gradienter: hvor og hvordan bildet endrer seg</h2>
+    <p>For hver piksel sammenligner vi naboene på hver side. Dalal &amp; Triggs fant at det enkleste filteret, <code>[-1, 0, 1]</code>, fungerer best. Sobel og glatting før gradienten gjorde resultatet dårligere fordi fine kanter ble visket ut.</p>
+    <div class="formula">Gx = I(x+1, y) − I(x−1, y)          endring horisontalt
+Gy = I(x, y−1) − I(x, y+1)          endring vertikalt (opp minus ned)
+
+|G| = √(Gx² + Gy²)                  gradientstyrke (magnitude)
+θ   = atan2(Gy, Gx)  mod 180°       retning, «unsigned»</div>
+    <p>Gradienten peker alltid mot det lyseste og står <em>vinkelrett</em> på kanten. HOG bruker vanligvis vinkler fra 0° til 180°. Da gir mørk-til-lys og lys-til-mørk samme retning, og det er formen som teller, ikke hvilken side som er lysest.</p>
+  </div>
+
+  <div class="widget" id="wA">
+    <div class="widget-head"><h3>Én kant, én gradient</h3><span class="hint">Drei kanten og se hva midtpikselen måler</span></div>
+    <div class="two">
+      <canvas id="patchC" width="300" height="300" aria-label="15 × 15 piksler med en kant, og gradientpilen i midten"></canvas>
+      <div style="display:grid;gap:16px">
+        <div class="controls">
+          <div class="ctl"><label for="aAng">Kantens normal</label><input type="range" id="aAng" min="0" max="359" value="35"><output id="aAngO">35°</output></div>
+          <div class="ctl"><label for="aCon">Kontrast</label><input type="range" id="aCon" min="10" max="255" value="200"><output id="aConO">200</output></div>
+        </div>
+        <dl class="readout" id="aRead"></dl>
+        <div>
+          <div class="ctl"><span class="lbl" style="font-family:var(--f-display);font-size:.88rem">Havner i bin (9 bins à 20°)</span></div>
+          <div class="bins9" id="aBins"></div>
+        </div>
+        <p style="font-size:.9rem;color:var(--muted)">Blå pil: gradienten. Oransje strek: kanten, som står vinkelrett på gradienten. Det er den oransje retningen HOG-bildet tegner. Prøv 35° og 215°: pilen snur, men bin-en er den samme.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="celler">
+  <div class="prose">
+    <span class="eyebrow">Steg 2</span>
+    <h2>Cellehistogrammer: tell retningene lokalt</h2>
+    <p>Bildet deles i små <strong>celler</strong>, typisk 8 × 8 piksler. For hver celle lager vi et histogram med <strong>bins</strong> for retning, typisk 9 bins à 20° mellom 0° og 180°. Hver piksel stemmer på bin-en for sin retning, og stemmen vektes med gradientstyrken. En skarp kant teller mye, og flate områder teller nesten ingenting.</p>
+    <p>En celle med en loddrett kant får altså en høy stolpe rundt 0° (gradienten er vannrett). En celle med gress eller støy får stemmer spredt over alle bins.</p>
+    <div class="note"><b>Detalj som er grei å kunne:</b> Dalal &amp; Triggs deler stemmen mellom de to nærmeste bins (interpolering). <code>skimage</code> gjør det enklere og legger hele stemmen i én bin, og tar gjennomsnittet over cellen. Modellen lenger ned gjør det samme som skimage.</div>
+  </div>
+</section>
+
+<section id="blokker">
+  <div class="prose">
+    <span class="eyebrow">Steg 3</span>
+    <h2>Blokknormalisering: gjør den robust mot lys</h2>
+    <p>Gradientene skalerer med kontrasten. Dobles kontrasten, dobles alle stolpene, selv om formen er den samme. Derfor grupperes cellene i overlappende <strong>blokker</strong>, typisk 2 × 2 celler. Histogrammene i en blokk limes sammen til én vektor (2 · 2 · 9 = 36 tall) og normaliseres.</p>
+    <div class="formula">L2-Hys:   v ← v / √(‖v‖² + ε²)      L2-normaliser
+          v ← min(v, 0.2)             klipp store verdier
+          v ← v / √(‖v‖² + ε²)      normaliser på nytt</div>
+    <p>Klippingen hindrer at én veldig sterk kant dominerer hele blokken. Blokkene flyttes én celle om gangen, så hver celle normaliseres flere ganger med ulike naboer. Det er derfor deskriptoren blir mye lengre enn antall celler × bins.</p>
+  </div>
+
+  <div class="widget" id="wB">
+    <div class="widget-head"><h3>Én blokk, to versjoner</h3><span class="hint">Skru opp og ned kontrasten</span></div>
+    <div class="controls">
+      <div class="ctl"><label for="bK">Kontrastfaktor</label><input type="range" id="bK" min="0.2" max="3" step="0.1" value="1"><output id="bKO">× 1.0</output></div>
+      <div class="ctl"><span class="lbl">Lengde før normalisering</span><output id="bNorm">‖v‖ = 0</output></div>
+    </div>
+    <div class="lab-bottom">
+      <div class="panel"><figcaption><span>Rå histogram (36 verdier)</span><span>fast akse</span></figcaption><canvas id="bRaw" width="460" height="200"></canvas></div>
+      <div class="panel"><figcaption><span>Etter L2-Hys</span><span>fast akse</span></figcaption><canvas id="bNrm" width="460" height="200"></canvas></div>
+    </div>
+    <p style="font-size:.9rem;color:var(--muted)">Venstre side vokser med kontrasten, høyre står stille. Den stiplede linjen viser klippegrensen 0,2. Merk også: å legge en konstant til alle piksler (lysere bilde) endrer ikke gradientene i det hele tatt, fordi gradienten er en differanse.</p>
+  </div>
+</section>
+
+<section id="lab">
+  <div class="prose">
+    <span class="eyebrow">Steg 4 · alt samlet</span>
+    <h2>HOG-laben</h2>
+    <p>Her kjøres hele pipelinen på et 256 × 256-bilde, akkurat som deloppgave 3 ber om: originalbildet, gradientbildet og HOG-bildet. Hver celle i HOG-bildet tegnes som en stjerne av streker, én per bin, der lysstyrken viser hvor mye bin-en fikk. Strekene går <em>langs</em> kantene. Klikk på en celle for å se histogrammet.</p>
+  </div>
+
+  <div class="widget" id="wC">
+    <div class="controls">
+      <div class="ctl"><span class="lbl">Bilde</span>
+        <div class="seg" id="cImg">
+          <button type="button" data-p="enkel" aria-pressed="true">Enkel scene</button>
+          <button type="button" data-p="person" aria-pressed="false">Person</button>
+          <button type="button" data-p="kompleks" aria-pressed="false">Kompleks scene</button>
+          <label class="filebtn" for="cFile">Ditt eget …</label>
+          <input type="file" id="cFile" accept="image/*" hidden>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="cCell">Cellestørrelse (pixels_per_cell)</label>
+        <select id="cCell"><option>4</option><option selected>8</option><option>16</option><option>32</option></select></div>
+      <div class="ctl"><label for="cBlock">Blokkstørrelse (cells_per_block)</label>
+        <select id="cBlock"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+      <div class="ctl"><label for="cBins">Bins (orientations)</label><input type="range" id="cBins" min="2" max="18" value="9"><output id="cBinsO">9 bins à 20°</output></div>
+      <div class="ctl"><span class="lbl">Gradientbilde viser</span>
+        <div class="seg" id="cGrad"><button type="button" data-g="mag" aria-pressed="true">Styrke</button><button type="button" data-g="dir" aria-pressed="false">Retning</button></div>
+      </div>
+    </div>
+    <div class="lab-panels">
+      <figure class="panel" style="margin:0"><canvas id="origC" width="256" height="256" aria-label="Originalbilde i gråtoner"></canvas><figcaption><span>Original (gråtone)</span></figcaption></figure>
+      <figure class="panel" style="margin:0"><canvas id="gradC" width="256" height="256" aria-label="Gradientbilde"></canvas><figcaption><span id="gradCap">Gradient |G|</span></figcaption></figure>
+      <figure class="panel" style="margin:0"><canvas id="hogC" width="512" height="512" tabindex="0" aria-label="HOG-visualisering. Klikk eller bruk piltaster for å velge celle."></canvas><figcaption><span>HOG-bilde</span><span>klikk en celle</span></figcaption></figure>
+    </div>
+    <div class="stats" id="cStats"></div>
+    <div class="lab-bottom">
+      <div class="panel"><figcaption><span id="histCap">Histogram for valgt celle</span></figcaption><canvas id="histC" width="480" height="190"></canvas></div>
+      <div style="display:grid;gap:10px;font-size:.93rem;color:var(--ink-2)">
+        <p><b style="font-family:var(--f-display);color:var(--ink)">Ting å prøve</b></p>
+        <p>Sett cellestørrelsen til 4 og så 32 på personen. Små celler viser detaljer som hånd og hode. Store celler viser bare at det er noe avlangt og loddrett der.</p>
+        <p>Sett bins til 3 på den enkle scenen. Sirkelen blir kantete fordi alle retninger må presses inn i tre bøtter.</p>
+        <p>Endre blokkstørrelsen og se på lengden. Bildet endrer seg ikke, fordi skimage tegner HOG-bildet <em>før</em> blokknormaliseringen, men vektoren blir mye lengre.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="parametre">
+  <div class="prose">
+    <span class="eyebrow">Deloppgave 4</span>
+    <h2>Hva parameterne gjør</h2>
+    <p>Lengden på deskriptoren følger direkte av parameterne. Med B = blokkstørrelse i celler:</p>
+    <div class="formula">celler   = ⌊H / cell⌋ × ⌊W / cell⌋
+blokker  = (celler_y − B + 1) × (celler_x − B + 1)
+lengde   = blokker × B² × bins
+
+eks. 128×64, cell 8, B 2, 9 bins:  15 × 7 blokker × 36 = 3 780</div>
+    <div class="note"><b>For heatmap-settet:</b> ett 960 × 540-bilde med standardparametre gir 119 × 66 blokker × 36 = 282 744 tall. Skaler ned (f.eks. til 256 bredt) før dere sammenligner, og bruk samme størrelse på alle bildene som skal sammenlignes. Ellers blir vektorene ulikt lange.</div>
+  </div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Parameter</th><th>Liten verdi</th><th>Stor verdi</th><th>Typisk</th></tr></thead>
+      <tbody>
+        <tr><td>Cellestørrelse<br><code>pixels_per_cell</code></td><td>Fine detaljer og mange celler. Lang vektor som er følsom for støy og små forskyvninger.</td><td>Grov form. Detaljer forsvinner, men beskrivelsen tåler at objektet flytter seg litt.</td><td>8 × 8</td></tr>
+        <tr><td>Blokkstørrelse<br><code>cells_per_block</code></td><td>1 × 1: hver celle normaliseres alene. Kort vektor, lite robust mot skygger og ujevnt lys.</td><td>Normaliserer over et større område. Tåler lysvariasjon, men svake kanter ved siden av sterke blir undertrykt. Vektoren vokser med B².</td><td>2 × 2</td></tr>
+        <tr><td>Bins<br><code>orientations</code></td><td>Grov vinkeloppløsning. Kanter i ulike retninger havner i samme bin.</td><td>Fin oppløsning, men hver bin får færre stemmer og blir mer støyete. Over 9 gir lite i følge Dalal &amp; Triggs.</td><td>9</td></tr>
+        <tr><td>Normalisering<br><code>block_norm</code></td><td colspan="2"><code>'L2-Hys'</code> er standard i skimage og originalartikkelen. <code>'L1'</code> og <code>'L2'</code> gir nesten samme resultat, men uten klipping kan én sterk kant dominere.</td><td>L2-Hys</td></tr>
+        <tr><td>Gammakorreksjon<br><code>transform_sqrt</code></td><td colspan="2">Tar kvadratroten av bildet først. Demper forskjeller i belysning ytterligere. Kan nevnes kort i diskusjonen.</td><td>False</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="kode">
+  <div class="prose">
+    <span class="eyebrow">Fra teori til kode</span>
+    <h2>Slik ser det ut i Python</h2>
+    <p><code>hog</code> returnerer både vektoren og visualiseringen. Gradientbildet må du lage selv, for eksempel med <code>np.gradient</code>, som bruker samme sentrale differanse som HOG.</p>
+  </div>
+<pre class="code"><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> matplotlib.pyplot <span class="k">as</span> plt
+<span class="k">from</span> skimage <span class="k">import</span> io, color, exposure, transform
+<span class="k">from</span> skimage.feature <span class="k">import</span> hog
+
+img = color.rgb2gray(io.imread(<span class="s">"bilde.png"</span>)[..., :<span class="s">3</span>])
+img = transform.resize(img, (<span class="s">256</span>, <span class="s">256</span>), anti_aliasing=<span class="k">True</span>)
+
+<span class="c"># Gradientbildet (deloppgave 3)</span>
+gy, gx = np.gradient(img)           <span class="c"># rader først, så kolonner</span>
+magnitude = np.hypot(gx, gy)
+
+<span class="c"># HOG-deskriptor og visualisering</span>
+features, hog_img = hog(
+    img,
+    orientations=<span class="s">9</span>,
+    pixels_per_cell=(<span class="s">8</span>, <span class="s">8</span>),
+    cells_per_block=(<span class="s">2</span>, <span class="s">2</span>),
+    block_norm=<span class="s">"L2-Hys"</span>,
+    visualize=<span class="k">True</span>,
+)
+hog_img = exposure.rescale_intensity(hog_img, in_range=(<span class="s">0</span>, hog_img.max() / <span class="s">2</span>))  <span class="c"># lysere svake streker</span>
+
+fig, ax = plt.subplots(<span class="s">1</span>, <span class="s">3</span>, figsize=(<span class="s">12</span>, <span class="s">4</span>))
+<span class="k">for</span> a, im, t <span class="k">in</span> zip(ax, [img, magnitude, hog_img], [<span class="s">"Original"</span>, <span class="s">"Gradient |G|"</span>, <span class="s">"HOG"</span>]):
+    a.imshow(im, cmap=<span class="s">"gray"</span>); a.set_title(t); a.axis(<span class="s">"off"</span>)
+
+<span class="c"># Parameterstudie (deloppgave 4)</span>
+<span class="k">for</span> ppc <span class="k">in</span> [<span class="s">4</span>, <span class="s">8</span>, <span class="s">16</span>]:
+    <span class="k">for</span> cpb <span class="k">in</span> [<span class="s">1</span>, <span class="s">2</span>, <span class="s">3</span>]:
+        <span class="k">for</span> ori <span class="k">in</span> [<span class="s">4</span>, <span class="s">9</span>, <span class="s">18</span>]:
+            f = hog(img, orientations=ori, pixels_per_cell=(ppc, ppc), cells_per_block=(cpb, cpb))
+            print(ppc, cpb, ori, f.size)</pre>
+
+  <div class="prose">
+    <h3>Å sammenligne HOG mellom bilder</h3>
+    <p>Deloppgave 4 ber dere sammenligne deskriptorene fra ulike bilder. Tre grep som gir innsikt uten å bli lange:</p>
+    <ul style="margin:0;padding-left:1.2em;display:grid;gap:6px">
+      <li><strong>Global retningsfordeling:</strong> summer vektoren per bin, <code>features.reshape(-1, 9).sum(0)</code>. En bygning gir topper ved 0° og 90°, en skog gir en flat fordeling.</li>
+      <li><strong>Hvor mye «kant» det er:</strong> andelen celler med nesten null energi. Enkle scener har mange tomme celler.</li>
+      <li><strong>Avstand mellom vektorer:</strong> cosinuslikhet mellom to bilder av samme størrelse. To heatmaps av samme lysbilde bør ligne mer på hverandre enn på et skogbilde.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="sjekk">
+  <div class="prose">
+    <span class="eyebrow">Før du starter</span>
+    <h2>Sjekkliste mot oppgaveteksten</h2>
+  </div>
+  <ul class="checks prose">
+    <li><span>1</span><p>Skript som beregner HOG med <code>skimage.feature.hog</code> (eller <code>cv2.HOGDescriptor</code>).</p></li>
+    <li><span>2</span><p>Minst tre bilder, både enkle og komplekse. Forslag: et heatmap-lysbilde med lite tekst (enkelt), et gatebilde eller skog fra Intel (komplekst), og <code>skimage.data.astronaut()</code> eller en silhuett som <code>skimage.data.horse()</code>. Skriv i rapporten hvor bildene kommer fra.</p></li>
+    <li><span>3</span><p>For hvert bilde: original, gradientbilde og HOG-bilde side om side.</p></li>
+    <li><span>4</span><p>Sammenlign deskriptorene mellom bildene, og diskuter cellestørrelse, blokkstørrelse og bins med både bilder og vektorlengde. Husk at 40 % av poengene er innsikt: forklar <em>hvorfor</em> en endring ser ut som den gjør.</p></li>
+  </ul>
+</section>
+
+<section id="quiz">
+  <div class="prose">
+    <span class="eyebrow">Test deg selv</span>
+    <h2>Tre kontrollspørsmål</h2>
+  </div>
+  <div class="quiz">
+    <details><summary>En mørk strek på lys bakgrunn og en lys strek på mørk bakgrunn gir samme HOG. Hvorfor?</summary><p>Gradientene peker motsatt vei (forskjell på 180°), men HOG bruker vinkler modulo 180°. Begge havner i samme bin, så deskriptoren beskriver formen og ikke fortegnet på kontrasten.</p></details>
+    <details><summary>Alle pikselverdier ganges med 2. Hva skjer med gradientene og med den ferdige deskriptoren?</summary><p>Alle gradientstyrker dobles, og dermed alle cellehistogrammer. Blokknormaliseringen deler på lengden av blokkvektoren, som også dobles, så den ferdige deskriptoren blir (nesten) uendret. Bare ε gjør en liten forskjell.</p></details>
+    <details><summary>Et 128 × 64-bilde, 8 × 8-celler, 2 × 2-blokker og 9 bins. Hvor lang blir vektoren?</summary><p>16 × 8 celler gir 15 × 7 = 105 blokker. Hver blokk har 2 · 2 · 9 = 36 tall. 105 · 36 = 3 780, som er tallet fra originalartikkelen.</p></details>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+const root=document.documentElement;
+const tok=n=>getComputedStyle(root).getPropertyValue(n).trim();
+
+/* ---------- Widget A: én kant ---------- */
+const pC=document.getElementById('patchC'),pX=pC.getContext('2d');
+const aAng=document.getElementById('aAng'),aCon=document.getElementById('aCon');
+const aBins=document.getElementById('aBins');
+for(let i=0;i<9;i++){const d=document.createElement('div');d.textContent=(i*20)+'–'+(i*20+20);aBins.appendChild(d);}
+function drawA(){
+  const N=15,C=7,px=20,th=+aAng.value,con=+aCon.value;
+  document.getElementById('aAngO').textContent=th+'°';
+  document.getElementById('aConO').textContent=con;
+  const lo=(255-con)/2,t=th*Math.PI/180,nx=Math.cos(t),ny=-Math.sin(t);
+  const I=(x,y)=>lo+con/(1+Math.exp(-((x-C)*nx+(y-C)*ny)/0.9));
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const v=Math.round(I(x,y));pX.fillStyle=`rgb(${v},${v},${v})`;pX.fillRect(x*px,y*px,px,px);}
+  const acc=tok('--accent'),warm=tok('--warm');
+  // naboer som brukes
+  pX.lineWidth=2;pX.strokeStyle=acc;
+  [[C-1,C],[C+1,C],[C,C-1],[C,C+1]].forEach(([x,y])=>{pX.setLineDash([3,3]);pX.strokeRect(x*px+1,y*px+1,px-2,px-2);});
+  pX.setLineDash([]);pX.strokeRect(C*px+1,C*px+1,px-2,px-2);
+  const gx=I(C+1,C)-I(C-1,C),gy=I(C,C-1)-I(C,C+1);
+  const mag=Math.hypot(gx,gy);let deg=Math.atan2(gy,gx)*180/Math.PI;if(deg<0)deg+=360;
+  let u=deg%180;const bin=Math.min(8,Math.floor(u/20));
+  const cx=C*px+px/2,cy=C*px+px/2;
+  // kant (oransje)
+  const e=(u+90)*Math.PI/180;
+  pX.strokeStyle=warm;pX.lineWidth=4;pX.lineCap='round';
+  pX.beginPath();pX.moveTo(cx-Math.cos(e)*130,cy+Math.sin(e)*130);pX.lineTo(cx+Math.cos(e)*130,cy-Math.sin(e)*130);pX.stroke();
+  // gradientpil (blå)
+  const L=Math.max(18,Math.min(125,mag/130*125)),dx=gx/mag,dy=-gy/mag;
+  const ex=cx+dx*L,ey=cy+dy*L;
+  pX.strokeStyle=acc;pX.fillStyle=acc;pX.lineWidth=5;
+  pX.beginPath();pX.moveTo(cx,cy);pX.lineTo(ex,ey);pX.stroke();
+  const ang=Math.atan2(dy,dx);pX.beginPath();pX.moveTo(ex+Math.cos(ang)*6,ey+Math.sin(ang)*6);
+  pX.lineTo(ex+Math.cos(ang+2.5)*16,ey+Math.sin(ang+2.5)*16);pX.lineTo(ex+Math.cos(ang-2.5)*16,ey+Math.sin(ang-2.5)*16);pX.closePath();pX.fill();
+  document.getElementById('aRead').innerHTML=
+    `<dt>Gx</dt><dd>${gx.toFixed(1)}</dd><dt>Gy</dt><dd>${gy.toFixed(1)}</dd>`+
+    `<dt>|G|</dt><dd>√(Gx² + Gy²) = ${mag.toFixed(1)}</dd>`+
+    `<dt>θ</dt><dd>${deg.toFixed(1)}° → ${u.toFixed(1)}° (mod 180)</dd>`+
+    `<dt>stemme</dt><dd>+${mag.toFixed(1)} i bin ${bin} (${bin*20}°–${bin*20+20}°)</dd>`;
+  [...aBins.children].forEach((d,i)=>d.classList.toggle('on',i===bin));
+}
+aAng.addEventListener('input',drawA);aCon.addEventListener('input',drawA);
+
+/* ---------- Widget B: blokknormalisering ---------- */
+const base=[];const peaks=[[1,1.0],[4,0.6],[7,0.35],[2,0.8]];
+for(let c=0;c<4;c++)for(let b=0;b<9;b++){const d=Math.min(Math.abs(b-peaks[c][0]),9-Math.abs(b-peaks[c][0]));base.push(peaks[c][1]*Math.exp(-d*d/1.6)+0.04+0.03*((b*7+c*3)%5)/5);}
+const eps=1e-3;
+function l2hys(v){let n=Math.sqrt(v.reduce((s,x)=>s+x*x,0)+eps*eps);let w=v.map(x=>Math.min(x/n,0.2));n=Math.sqrt(w.reduce((s,x)=>s+x*x,0)+eps*eps);return w.map(x=>x/n);}
+const rawMax=3*Math.max(...base),nrmMax=Math.max(...l2hys(base))*1.3;
+function bars(cv,vals,max,clip){
+  const x=cv.getContext('2d'),W=cv.width,H=cv.height,padB=22,padT=8;
+  x.clearRect(0,0,W,H);
+  const acc=tok('--accent'),mut=tok('--muted'),line=tok('--line'),warm=tok('--warm');
+  x.strokeStyle=line;x.lineWidth=1;x.beginPath();x.moveTo(0,H-padB+.5);x.lineTo(W,H-padB+.5);x.stroke();
+  const gw=(W-3*10)/4,bw=gw/9;
+  x.font='12px "JetBrains Mono",monospace';x.fillStyle=mut;x.textAlign='center';
+  for(let c=0;c<4;c++){
+    const x0=c*(gw+10);
+    for(let b=0;b<9;b++){const v=vals[c*9+b],h=Math.min(1,v/max)*(H-padB-padT);x.fillStyle=acc;x.fillRect(x0+b*bw+1,H-padB-h,bw-2,h);}
+    x.fillStyle=mut;x.fillText('celle '+(c+1),x0+gw/2,H-6);
+  }
+  if(clip){const y=H-padB-(0.2/max)*(H-padB-padT);x.strokeStyle=warm;x.setLineDash([4,4]);x.beginPath();x.moveTo(0,y);x.lineTo(W,y);x.stroke();x.setLineDash([]);
+    x.fillStyle=warm;x.textAlign='right';x.fillText('0.2',W-2,y-4);}
+}
+const bK=document.getElementById('bK');
+function drawB(){const k=+bK.value;const raw=base.map(v=>v*k);
+  document.getElementById('bKO').textContent='× '+k.toFixed(1);
+  document.getElementById('bNorm').textContent='‖v‖ = '+Math.sqrt(raw.reduce((s,x)=>s+x*x,0)).toFixed(2);
+  bars(document.getElementById('bRaw'),raw,rawMax,false);bars(document.getElementById('bNrm'),l2hys(raw),nrmMax,true);}
+bK.addEventListener('input',drawB);
+
+/* ---------- Widget C: HOG-laben ---------- */
+const S=256;
+const src=document.createElement('canvas');src.width=src.height=S;const sx=src.getContext('2d');
+const gray=new Float32Array(S*S),gmag=new Float32Array(S*S),gang=new Float32Array(S*S);
+let st={cell:8,block:2,bins:9,grad:'mag',sel:[4,4]},H=null,ncx=0,ncy=0;
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const presets={
+  enkel(){sx.fillStyle='#222';sx.fillRect(0,0,S,S);sx.fillStyle='#e2e2e2';sx.fillRect(34,58,104,132);
+    sx.fillStyle='#a8a8a8';sx.beginPath();sx.arc(186,112,46,0,7);sx.fill();
+    sx.fillStyle='#707070';sx.beginPath();sx.moveTo(150,232);sx.lineTo(230,232);sx.lineTo(190,172);sx.closePath();sx.fill();},
+  person(){const g=sx.createLinearGradient(0,0,0,S);g.addColorStop(0,'#cfcfcf');g.addColorStop(1,'#9a9a9a');sx.fillStyle=g;sx.fillRect(0,0,S,S);
+    sx.fillStyle='#2c2c2c';sx.strokeStyle='#2c2c2c';sx.lineCap='round';
+    sx.beginPath();sx.arc(128,48,19,0,7);sx.fill();
+    sx.beginPath();sx.moveTo(104,78);sx.lineTo(152,78);sx.lineTo(148,162);sx.lineTo(108,162);sx.closePath();sx.fill();
+    sx.lineWidth=13;[[106,84,82,150],[150,84,172,150]].forEach(a=>{sx.beginPath();sx.moveTo(a[0],a[1]);sx.lineTo(a[2],a[3]);sx.stroke();});
+    sx.lineWidth=18;[[118,158,108,236],[138,158,150,236]].forEach(a=>{sx.beginPath();sx.moveTo(a[0],a[1]);sx.lineTo(a[2],a[3]);sx.stroke();});},
+  kompleks(){const r=rng(3212);sx.fillStyle='#777';sx.fillRect(0,0,S,S);
+    for(let i=0;i<22;i++){const v=Math.floor(60+r()*150);sx.save();sx.translate(r()*S,r()*S);sx.rotate(r()*Math.PI);sx.fillStyle=`rgb(${v},${v},${v})`;sx.fillRect(-r()*40,-r()*30,20+r()*70,14+r()*50);sx.restore();}
+    for(let i=0;i<70;i++){const v=Math.floor(r()*255);sx.strokeStyle=`rgb(${v},${v},${v})`;sx.lineWidth=1+r()*4;sx.beginPath();const x=r()*S,y=r()*S,a=r()*Math.PI*2,l=10+r()*70;sx.moveTo(x,y);sx.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l);sx.stroke();}
+    for(let i=0;i<14;i++){const v=Math.floor(r()*255);sx.fillStyle=`rgb(${v},${v},${v})`;sx.beginPath();sx.arc(r()*S,r()*S,4+r()*20,0,7);sx.fill();}
+    const d=sx.getImageData(0,0,S,S);for(let i=0;i<d.data.length;i+=4){const n=(r()-.5)*40;d.data[i]+=n;d.data[i+1]+=n;d.data[i+2]+=n;}sx.putImageData(d,0,0);}
+};
+function loadGray(){const d=sx.getImageData(0,0,S,S).data;for(let i=0;i<S*S;i++)gray[i]=(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2])/255;computeGrad();}
+function computeGrad(){gmag.fill(0);gang.fill(0);
+  for(let y=1;y<S-1;y++)for(let x=1;x<S-1;x++){const i=y*S+x,gx=gray[i+1]-gray[i-1],gy=gray[i-S]-gray[i+S];
+    gmag[i]=Math.hypot(gx,gy);let a=Math.atan2(gy,gx)*180/Math.PI;if(a<0)a+=180;if(a>=180)a-=180;gang[i]=a;}
+  render();}
+function computeHog(){const c=st.cell,B=st.bins,w=180/B;ncx=Math.floor(S/c);ncy=ncx;H=new Float32Array(ncx*ncy*B);
+  for(let y=0;y<ncy*c;y++)for(let x=0;x<ncx*c;x++){const i=y*S+x;const b=Math.min(B-1,Math.floor(gang[i]/w));H[((Math.floor(y/c))*ncx+Math.floor(x/c))*B+b]+=gmag[i];}
+  for(let i=0;i<H.length;i++)H[i]/=c*c;}
+function hsl2rgb(h,s,l){const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return[f(0)*255,f(8)*255,f(4)*255];}
+function render(){
+  computeHog();
+  if(st.sel[0]>=ncx)st.sel=[ncx-1,st.sel[1]];if(st.sel[1]>=ncy)st.sel=[st.sel[0],ncy-1];
+  // original
+  const o=document.getElementById('origC').getContext('2d'),oi=o.createImageData(S,S);
+  for(let i=0;i<S*S;i++){const v=gray[i]*255;oi.data[i*4]=oi.data[i*4+1]=oi.data[i*4+2]=v;oi.data[i*4+3]=255;}o.putImageData(oi,0,0);
+  // gradient
+  const sorted=Float32Array.from(gmag).sort(),p99=sorted[Math.floor(sorted.length*.99)]||1;
+  const g=document.getElementById('gradC').getContext('2d'),gi=g.createImageData(S,S);
+  for(let i=0;i<S*S;i++){const m=Math.min(1,gmag[i]/p99);let r,gg,b;
+    if(st.grad==='mag'){r=gg=b=m*255;}else{[r,gg,b]=hsl2rgb(gang[i]*2,.85,m*.55);}
+    gi.data[i*4]=r;gi.data[i*4+1]=gg;gi.data[i*4+2]=b;gi.data[i*4+3]=255;}
+  g.putImageData(gi,0,0);
+  document.getElementById('gradCap').textContent=st.grad==='mag'?'Gradient |G|':'Gradient: retning som farge (0–180°)';
+  // HOG
+  const hc=document.getElementById('hogC'),h=hc.getContext('2d'),Z=hc.width/S,c=st.cell,B=st.bins;
+  h.fillStyle=tok('--plate');h.fillRect(0,0,hc.width,hc.height);
+  let mx=0;for(const v of H)if(v>mx)mx=v;mx=mx||1;
+  if(c>=8){h.strokeStyle='rgba(255,255,255,.06)';h.lineWidth=1;h.beginPath();for(let k=0;k<=ncx;k++){h.moveTo(k*c*Z+.5,0);h.lineTo(k*c*Z+.5,ncy*c*Z);h.moveTo(0,k*c*Z+.5);h.lineTo(ncx*c*Z,k*c*Z+.5);}h.stroke();}
+  h.lineCap='round';h.lineWidth=Math.max(1,c*Z/14);
+  const rad=c*Z*0.46;
+  for(let cy=0;cy<ncy;cy++)for(let cx=0;cx<ncx;cx++){const X=(cx+.5)*c*Z,Y=(cy+.5)*c*Z;
+    for(let b=0;b<B;b++){const v=H[(cy*ncx+cx)*B+b]/mx;if(v<0.02)continue;
+      const e=((b+.5)*180/B+90)*Math.PI/180,dx=Math.cos(e)*rad,dy=-Math.sin(e)*rad;
+      h.strokeStyle=`rgba(236,242,247,${Math.min(1,v*1.6)})`;h.beginPath();h.moveTo(X-dx,Y-dy);h.lineTo(X+dx,Y+dy);h.stroke();}}
+  const [sx0,sy0]=st.sel,bl=st.block;
+  const bx=Math.min(sx0,ncx-bl),by=Math.min(sy0,ncy-bl);
+  h.setLineDash([6,5]);h.strokeStyle='#7FB2EE';h.lineWidth=2;h.strokeRect(bx*c*Z+1,by*c*Z+1,bl*c*Z-2,bl*c*Z-2);h.setLineDash([]);
+  h.strokeStyle='#F0A050';h.lineWidth=3;h.strokeRect(sx0*c*Z+1.5,sy0*c*Z+1.5,c*Z-3,c*Z-3);
+  // stats
+  const nbx=ncx-bl+1,nby=ncy-bl+1,len=nbx*nby*bl*bl*B;
+  document.getElementById('cStats').innerHTML=`256×256 px → <b>${ncy}×${ncx}</b> celler → <b>${nby}×${nbx}</b> blokker × (${bl}²·${B} = ${bl*bl*B}) = <b>${len.toLocaleString('nb-NO')}</b> tall i deskriptoren`;
+  drawHist();
+}
+function drawHist(){
+  const cv=document.getElementById('histC'),x=cv.getContext('2d'),W=cv.width,Hh=cv.height,B=st.bins,w=180/B;
+  const [cx,cy]=st.sel;const vals=[];for(let b=0;b<B;b++)vals.push(H[(cy*ncx+cx)*B+b]);
+  let mx=0;for(const v of H)if(v>mx)mx=v;mx=mx||1;
+  x.clearRect(0,0,W,Hh);const padB=24,padT=10,bw=W/B;
+  x.strokeStyle=tok('--line');x.beginPath();x.moveTo(0,Hh-padB+.5);x.lineTo(W,Hh-padB+.5);x.stroke();
+  x.font='11px "JetBrains Mono",monospace';x.textAlign='center';
+  const step=B>12?2:1;
+  vals.forEach((v,b)=>{const hh=Math.max(v>0?1:0,v/mx*(Hh-padB-padT));x.fillStyle=tok('--accent');x.fillRect(b*bw+2,Hh-padB-hh,bw-4,hh);
+    if(b%step===0){x.fillStyle=tok('--muted');x.fillText(Math.round(b*w)+'°',b*bw+bw/2,Hh-7);}});
+  document.getElementById('histCap').textContent=`Celle (rad ${cy}, kol ${cx}): ${B} bins à ${w.toFixed(w%1?1:0)}°, samme skala som HOG-bildet`;
+}
+function setPressed(group,btn){group.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===btn?'true':'false'));}
+const cImg=document.getElementById('cImg');
+cImg.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setPressed(cImg,b);presets[b.dataset.p]();loadGray();});
+document.getElementById('cFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(im.width,im.height);sx.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,S,S);setPressed(cImg,null);loadGray();};im.src=rd.result;};rd.readAsDataURL(f);});
+document.getElementById('cCell').addEventListener('change',e=>{const old=st.cell;st.cell=+e.target.value;st.sel=st.sel.map(v=>Math.floor(v*old/st.cell));render();});
+document.getElementById('cBlock').addEventListener('change',e=>{st.block=+e.target.value;render();});
+const cBins=document.getElementById('cBins');
+cBins.addEventListener('input',()=>{st.bins=+cBins.value;const w=180/st.bins;document.getElementById('cBinsO').textContent=`${st.bins} bins à ${w%1?w.toFixed(1):w}°`;render();});
+const cGrad=document.getElementById('cGrad');
+cGrad.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setPressed(cGrad,b);st.grad=b.dataset.g;render();});
+const hogC=document.getElementById('hogC');
+hogC.addEventListener('click',e=>{const r=hogC.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*S,y=(e.clientY-r.top)/r.height*S;
+  st.sel=[Math.min(ncx-1,Math.floor(x/st.cell)),Math.min(ncy-1,Math.floor(y/st.cell))];render();});
+hogC.addEventListener('keydown',e=>{const m={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(!m)return;e.preventDefault();
+  st.sel=[Math.max(0,Math.min(ncx-1,st.sel[0]+m[0])),Math.max(0,Math.min(ncy-1,st.sel[1]+m[1]))];render();});
+
+function all(){drawA();drawB();render();}
+presets.enkel();loadGray();st.sel=[5,9];render();drawA();drawB();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',all);
+new MutationObserver(all).observe(root,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts)document.fonts.ready.then(all);
+})();
+</script>

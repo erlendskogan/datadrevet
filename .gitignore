@@ -10,3 +10,6 @@ __pycache__/
 
 # Editor
 .vscode/
+
+# Zip-arkiver med datasett (for store for GitHub)
+*.zip
