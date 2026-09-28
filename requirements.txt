@@ -4,3 +4,6 @@ numpy==2.4.3
 matplotlib==3.10.8
 # Til oppgave 4–6 (skalering, splitting, PCA)
 scikit-learn==1.9.0
+# Assignment 2 (Fourier: scipy.fft og innlesing av PNG)
+scipy==1.18.1
+pillow==12.3.0

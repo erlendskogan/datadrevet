@@ -1,7 +1,26 @@
 # Assignment 2 – Image Processing
 
-Oppgaveteksten ligger i `oppgave.pdf`. Datasettene er fra Canvas og ligger utenfor repoet i
-`../../datasett/images/`.
+Oppgaveteksten ligger i `oppgave.pdf`. Datasettet er fra Canvas og ligger i `heatmap-performance/`
+i roten av repoet.
+
+## Status
+
+| Del | Status | Norsk arbeidsversjon | Kode |
+|---|---|---|---|
+| Fourier-transformasjon (deloppgave 1–4) | ✅ | [`rapport/1-fourier.md`](rapport/1-fourier.md) | [`src/1_fourier.py`](src/1_fourier.py) |
+| PCA | – | | |
+| HOG | – | | |
+| LBP | – | | |
+| Blob-deteksjon | – | | |
+| Konturdeteksjon | – | | |
+
+Kjør fra roten av repoet. Skriptet skriver tallene i rapportteksten og lager figurene i
+`rapport/figurer/`. Det sjekker seg selv underveis (blant annet at invers DFT gir originalen tilbake og
+at PSNR regnet med Parsevals teorem er lik den målte) og tar rundt 10 sekunder.
+
+```bash
+.venv/bin/python assignment2/src/1_fourier.py
+```
 
 ## Valg av datasett: `heatmap-performance`
 
